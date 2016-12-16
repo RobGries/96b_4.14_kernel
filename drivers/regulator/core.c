@@ -99,6 +99,7 @@ struct regulator_supply_alias {
 };
 
 static int _regulator_is_enabled(struct regulator_dev *rdev);
+static int _regulator_enable(struct regulator_dev *rdev);
 static int _regulator_disable(struct regulator_dev *rdev);
 static int _regulator_get_voltage(struct regulator_dev *rdev);
 static int _regulator_get_current_limit(struct regulator_dev *rdev);
@@ -402,7 +403,42 @@ static ssize_t regulator_state_show(struct device *dev,
 
 	return ret;
 }
-static DEVICE_ATTR(state, 0444, regulator_state_show, NULL);
+static ssize_t regulator_state_set(struct device *dev,
+				   struct device_attribute *attr,
+				   const char *buf, size_t len)
+{
+	struct regulator_dev *rdev = dev_get_drvdata(dev);
+	bool enable;
+	ssize_t ret;
+
+	if (!rdev->desc->userspace_control)
+		return -EPERM;
+
+	if (sysfs_streq(buf, "enabled\n") || sysfs_streq(buf, "1"))
+		enable = true;
+	else if (sysfs_streq(buf, "disabled\n") || sysfs_streq(buf, "0"))
+		enable = false;
+	else
+		return -EINVAL;
+
+	mutex_lock(&rdev->mutex);
+
+	if ((enable && _regulator_is_enabled(rdev)) ||
+	    (!enable && !_regulator_is_enabled(rdev))) {
+		mutex_unlock(&rdev->mutex);
+		return -EBUSY;
+	}
+
+	ret = enable ? _regulator_enable(rdev) : _regulator_disable(rdev);
+
+	mutex_unlock(&rdev->mutex);
+
+	if (ret)
+		return ret;
+
+	return len;
+}
+static DEVICE_ATTR(state, 0644, regulator_state_show, regulator_state_set);
 
 static ssize_t regulator_status_show(struct device *dev,
 				   struct device_attribute *attr, char *buf)
