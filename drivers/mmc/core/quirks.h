@@ -108,7 +108,7 @@ static const struct mmc_fixup mmc_ext_csd_fixups[] = {
 	 * is used so disable the HPI feature for such buggy cards.
 	 */
 	MMC_FIXUP_EXT_CSD_REV(CID_NAME_ANY, CID_MANFID_HYNIX,
-			      0x014a, add_quirk, MMC_QUIRK_BROKEN_HPI, 5),
+			      CID_OEMID_ANY, add_quirk, MMC_QUIRK_BROKEN_HPI, 5),
 
 	END_FIXUP
 };
