@@ -1364,6 +1364,8 @@ int of_overlay_remove_all(void);
 int of_overlay_notifier_register(struct notifier_block *nb);
 int of_overlay_notifier_unregister(struct notifier_block *nb);
 
+struct device_node *find_target_node(struct device_node *info_node);
+
 #else
 
 static inline int of_overlay_apply(struct device_node *tree, int *ovcs_id)
@@ -1389,6 +1391,11 @@ static inline int of_overlay_notifier_register(struct notifier_block *nb)
 static inline int of_overlay_notifier_unregister(struct notifier_block *nb)
 {
 	return 0;
+}
+
+static struct device_node *find_target_node(struct device_node *info_node)
+{
+	return info_node;
 }
 
 #endif

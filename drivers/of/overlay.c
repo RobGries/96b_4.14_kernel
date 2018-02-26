@@ -484,7 +484,7 @@ static int build_changeset(struct overlay_changeset *ovcs)
  * 1) "target" property containing the phandle of the target
  * 2) "target-path" property containing the path of the target
  */
-static struct device_node *find_target_node(struct device_node *info_node)
+struct device_node *find_target_node(struct device_node *info_node)
 {
 	const char *path;
 	u32 val;
@@ -503,6 +503,7 @@ static struct device_node *find_target_node(struct device_node *info_node)
 
 	return NULL;
 }
+EXPORT_SYMBOL_GPL(find_target_node);
 
 /**
  * init_overlay_changeset() - initialize overlay changeset from overlay tree
