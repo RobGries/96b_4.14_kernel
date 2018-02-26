@@ -1,0 +1,87 @@
+Configfs Overlay Interface
+==========================
+
+Introduction
+------------
+
+This document describes how to use the Configfs overlay interface
+for manipulating the device tree overlays at runtime from userspace.
+
+It is recommended to read the following documents before proceeding further:
+
+[1] Documentation/devicetree/usage-model.txt
+[2] Documentation/devicetree/overlay-notes.txt
+
+This interface is intended for the developers to quickly test the device
+tree overlays by loading/unloading them from userspace.
+
+Usage of `enable-overlay` property
+----------------------------------
+
+Keeping the security concerns in mind regarding modifying the kernel's
+live device tree, a maskable property called `enable-overlay` has been
+used for allowing the modifications to the certain part of live device tree.
+
+For instance, if the user wants to allow runtime modification to `foo` node
+by using overlays, then `enable-overlay` property has to be present for that
+node in the base device tree as below:
+
+        foo {
+                ...
+                enable-overlay;
+                ... 
+        };
+
+The above implies that `foo` node can be modified by the addition or removal
+of any child nodes in addition to modifying the properties using overlays.
+This gives the kernel a complete control of what nodes can be modified during
+runtime using overlays.
+
+Trying to add overlay for the target node without `enable-overlay` property
+in the base device tree will result in -EPERM error.
+
+How to use Configfs overlay interface
+-------------------------------------
+
+In order to use the Configfs overlay interface in a system, following actions
+needs to be done for building kernel and device tree.
+
+1. Configfs overlay interface should be selected using OF_CONFIGFS Kconfig
+   option.
+2. Base device tree should be compiled with -@ flag.
+
+Once the system is booted with the kernel and device tree undergoing above
+modifications, overlays can be applied as below.
+
+After mounting the Configfs file system, a device-tree configfs entry will
+be created in /config/device-tree/overlays and and it is manipulated using
+standard file system I/O. The following instructions can be carried out for
+loading/unloading overlays through configfs.
+
+1. Create a directory for the overlay.
+
+        # mkdir /config/device-tree/overlays/foo
+
+   This will create the files such as dtbo, status and path under foo/
+   directory.
+
+2. For loading an overlay using the firmware file, place the dtbo under
+   /lib/firmware and pass the name of the file to path file.
+
+        # echo foo.dtbo > /config/device-tree/overlays/foo/path
+
+3. Another way is to pass the contents of the overlay to the dtbo file.
+
+        # cat foo.dtbo > /config/device-tree/overlays/foo/dtbo
+
+   The overlay file will be applied, and devices will be created/destroyed
+   as required.
+
+4. To remove the overlay, simply remove the corresponding directory.
+
+        # rmdir /config/device-tree/overlays/foo
+
+The rationalle of the dual interface (firmware & direct copy) is that each is
+better suited to different use patterns. The firmware interface is what's
+intended to be used by hardware managers in the kernel, while the copy interface
+make sense for developers (since it avoids problems with namespaces).
