@@ -680,6 +680,8 @@ int snd_soc_get_strobe(struct snd_kcontrol *kcontrol,
 	struct snd_ctl_elem_value *ucontrol);
 int snd_soc_put_strobe(struct snd_kcontrol *kcontrol,
 	struct snd_ctl_elem_value *ucontrol);
+int snd_soc_info_multi_ext(struct snd_kcontrol *kcontrol,
+	struct snd_ctl_elem_info *uinfo);
 
 /**
  * struct snd_soc_jack_pin - Describes a pin to update based on jack detection
