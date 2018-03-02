@@ -341,7 +341,194 @@ static const struct snd_kcontrol_new msm8916_wcd_digital_snd_controls[] = {
 	SOC_SINGLE("RX1 Mute Switch", LPASS_CDC_RX1_B6_CTL, 0, 1, 0),
 	SOC_SINGLE("RX2 Mute Switch", LPASS_CDC_RX2_B6_CTL, 0, 1, 0),
 	SOC_SINGLE("RX3 Mute Switch", LPASS_CDC_RX3_B6_CTL, 0, 1, 0),
+
+
+	SOC_SINGLE_MULTI_EXT("IIR1 Band1", IIR1, BAND1, 255, 0, 5,
+	msm8x16_wcd_get_iir_band_audio_mixer,
+	msm8x16_wcd_put_iir_band_audio_mixer),
+	SOC_SINGLE_MULTI_EXT("IIR1 Band2", IIR1, BAND2, 255, 0, 5,
+	msm8x16_wcd_get_iir_band_audio_mixer,
+	msm8x16_wcd_put_iir_band_audio_mixer),
+	SOC_SINGLE_MULTI_EXT("IIR1 Band3", IIR1, BAND3, 255, 0, 5,
+	msm8x16_wcd_get_iir_band_audio_mixer,
+	msm8x16_wcd_put_iir_band_audio_mixer),
+	SOC_SINGLE_MULTI_EXT("IIR1 Band4", IIR1, BAND4, 255, 0, 5,
+	msm8x16_wcd_get_iir_band_audio_mixer,
+	msm8x16_wcd_put_iir_band_audio_mixer),
+	SOC_SINGLE_MULTI_EXT("IIR1 Band5", IIR1, BAND5, 255, 0, 5,
+	msm8x16_wcd_get_iir_band_audio_mixer,
+	msm8x16_wcd_put_iir_band_audio_mixer),
+	SOC_SINGLE_MULTI_EXT("IIR2 Band1", IIR2, BAND1, 255, 0, 5,
+	msm8x16_wcd_get_iir_band_audio_mixer,
+	msm8x16_wcd_put_iir_band_audio_mixer),
+	SOC_SINGLE_MULTI_EXT("IIR2 Band2", IIR2, BAND2, 255, 0, 5,
+	msm8x16_wcd_get_iir_band_audio_mixer,
+	msm8x16_wcd_put_iir_band_audio_mixer),
+	SOC_SINGLE_MULTI_EXT("IIR2 Band3", IIR2, BAND3, 255, 0, 5,
+	msm8x16_wcd_get_iir_band_audio_mixer,
+	msm8x16_wcd_put_iir_band_audio_mixer),
+	SOC_SINGLE_MULTI_EXT("IIR2 Band4", IIR2, BAND4, 255, 0, 5,
+	msm8x16_wcd_get_iir_band_audio_mixer,
+	msm8x16_wcd_put_iir_band_audio_mixer),
+	SOC_SINGLE_MULTI_EXT("IIR2 Band5", IIR2, BAND5, 255, 0, 5,
+	msm8x16_wcd_get_iir_band_audio_mixer,
+	msm8x16_wcd_put_iir_band_audio_mixer),
+
+
 };
+
+
+static uint32_t get_iir_band_coeff(struct snd_soc_codec *codec,
+				   int iir_idx, int band_idx,
+				   int coeff_idx)
+{
+	uint32_t value = 0;
+
+	/* Address does not automatically update if reading */
+	snd_soc_write(codec,
+		(LPASS_CDC_IIR1_COEF_B1_CTL + 64 * iir_idx),
+		((band_idx * BAND_MAX + coeff_idx)
+		* sizeof(uint32_t)) & 0x7F);
+
+	value |= snd_soc_read(codec,
+		(LPASS_CDC_IIR1_COEF_B2_CTL + 64 * iir_idx));
+
+	snd_soc_write(codec,
+		(LPASS_CDC_IIR1_COEF_B1_CTL + 64 * iir_idx),
+		((band_idx * BAND_MAX + coeff_idx)
+		* sizeof(uint32_t) + 1) & 0x7F);
+
+	value |= (snd_soc_read(codec,
+		(LPASS_CDC_IIR1_COEF_B2_CTL + 64 * iir_idx)) << 8);
+
+	snd_soc_write(codec,
+		(LPASS_CDC_IIR1_COEF_B1_CTL + 64 * iir_idx),
+		((band_idx * BAND_MAX + coeff_idx)
+		* sizeof(uint32_t) + 2) & 0x7F);
+
+	value |= (snd_soc_read(codec,
+		(LPASS_CDC_IIR1_COEF_B2_CTL + 64 * iir_idx)) << 16);
+
+	snd_soc_write(codec,
+		(LPASS_CDC_IIR1_COEF_B1_CTL + 64 * iir_idx),
+		((band_idx * BAND_MAX + coeff_idx)
+		* sizeof(uint32_t) + 3) & 0x7F);
+
+	/* Mask bits top 2 bits since they are reserved */
+	value |= ((snd_soc_read(codec, (LPASS_CDC_IIR1_COEF_B2_CTL
+		+ 64 * iir_idx)) & 0x3f) << 24);
+
+	return value;
+
+}
+
+static int msm8916_wcd_get_iir_band_audio_mixer(
+					struct snd_kcontrol *kcontrol,
+					struct snd_ctl_elem_value *ucontrol)
+{
+	struct snd_soc_codec *codec = snd_soc_kcontrol_codec(kcontrol);
+	int iir_idx = ((struct soc_multi_mixer_control *)
+					kcontrol->private_value)->reg;
+	int band_idx = ((struct soc_multi_mixer_control *)
+					kcontrol->private_value)->shift;
+
+	ucontrol->value.integer.value[0] =
+		get_iir_band_coeff(codec, iir_idx, band_idx, 0);
+	ucontrol->value.integer.value[1] =
+		get_iir_band_coeff(codec, iir_idx, band_idx, 1);
+	ucontrol->value.integer.value[2] =
+		get_iir_band_coeff(codec, iir_idx, band_idx, 2);
+	ucontrol->value.integer.value[3] =
+		get_iir_band_coeff(codec, iir_idx, band_idx, 3);
+	ucontrol->value.integer.value[4] =
+		get_iir_band_coeff(codec, iir_idx, band_idx, 4);
+
+	dev_dbg(codec->dev, "%s: IIR #%d band #%d b0 = 0x%x\n"
+		"%s: IIR #%d band #%d b1 = 0x%x\n"
+		"%s: IIR #%d band #%d b2 = 0x%x\n"
+		"%s: IIR #%d band #%d a1 = 0x%x\n"
+		"%s: IIR #%d band #%d a2 = 0x%x\n",
+		__func__, iir_idx, band_idx,
+		(uint32_t)ucontrol->value.integer.value[0],
+		__func__, iir_idx, band_idx,
+		(uint32_t)ucontrol->value.integer.value[1],
+		__func__, iir_idx, band_idx,
+		(uint32_t)ucontrol->value.integer.value[2],
+		__func__, iir_idx, band_idx,
+		(uint32_t)ucontrol->value.integer.value[3],
+		__func__, iir_idx, band_idx,
+		(uint32_t)ucontrol->value.integer.value[4]);
+	return 0;
+}
+
+static void set_iir_band_coeff(struct snd_soc_codec *codec,
+				int iir_idx, int band_idx,
+				uint32_t value)
+{
+	snd_soc_write(codec,
+		(LPASS_CDC_IIR1_COEF_B2_CTL + 64 * iir_idx),
+		(value & 0xFF));
+
+	snd_soc_write(codec,
+		(LPASS_CDC_IIR1_COEF_B2_CTL + 64 * iir_idx),
+		(value >> 8) & 0xFF);
+
+	snd_soc_write(codec,
+		(LPASS_CDC_IIR1_COEF_B2_CTL + 64 * iir_idx),
+		(value >> 16) & 0xFF);
+
+	/* Mask top 2 bits, 7-8 are reserved */
+	snd_soc_write(codec,
+		(LPASS_CDC_IIR1_COEF_B2_CTL + 64 * iir_idx),
+		(value >> 24) & 0x3F);
+
+}
+
+static int msm8916_wcd_put_iir_band_audio_mixer(
+					struct snd_kcontrol *kcontrol,
+					struct snd_ctl_elem_value *ucontrol)
+{
+	struct snd_soc_codec *codec = snd_soc_kcontrol_codec(kcontrol);
+	int iir_idx = ((struct soc_multi_mixer_control *)
+					kcontrol->private_value)->reg;
+	int band_idx = ((struct soc_multi_mixer_control *)
+					kcontrol->private_value)->shift;
+
+	/* Mask top bit it is reserved */
+	/* Updates addr automatically for each B2 write */
+	snd_soc_write(codec,
+		(LPASS_CDC_IIR1_COEF_B1_CTL + 64 * iir_idx),
+		(band_idx * BAND_MAX * sizeof(uint32_t)) & 0x7F);
+
+
+	set_iir_band_coeff(codec, iir_idx, band_idx,
+			   ucontrol->value.integer.value[0]);
+	set_iir_band_coeff(codec, iir_idx, band_idx,
+			   ucontrol->value.integer.value[1]);
+	set_iir_band_coeff(codec, iir_idx, band_idx,
+			   ucontrol->value.integer.value[2]);
+	set_iir_band_coeff(codec, iir_idx, band_idx,
+			   ucontrol->value.integer.value[3]);
+	set_iir_band_coeff(codec, iir_idx, band_idx,
+			   ucontrol->value.integer.value[4]);
+
+	dev_dbg(codec->dev, "%s: IIR #%d band #%d b0 = 0x%x\n"
+		"%s: IIR #%d band #%d b1 = 0x%x\n"
+		"%s: IIR #%d band #%d b2 = 0x%x\n"
+		"%s: IIR #%d band #%d a1 = 0x%x\n"
+		"%s: IIR #%d band #%d a2 = 0x%x\n",
+		__func__, iir_idx, band_idx,
+		get_iir_band_coeff(codec, iir_idx, band_idx, 0),
+		__func__, iir_idx, band_idx,
+		get_iir_band_coeff(codec, iir_idx, band_idx, 1),
+		__func__, iir_idx, band_idx,
+		get_iir_band_coeff(codec, iir_idx, band_idx, 2),
+		__func__, iir_idx, band_idx,
+		get_iir_band_coeff(codec, iir_idx, band_idx, 3),
+		__func__, iir_idx, band_idx,
+		get_iir_band_coeff(codec, iir_idx, band_idx, 4));
+	return 0;
+}
 
 static int msm8916_wcd_digital_enable_interpolator(
 						struct snd_soc_dapm_widget *w,
