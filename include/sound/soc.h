@@ -1310,6 +1310,11 @@ struct soc_mreg_control {
 	unsigned int regbase, regcount, nbits, invert;
 };
 
+struct soc_multi_mixer_control {
+	int min, max, platform_max, count;
+	unsigned int reg, rreg, shift, rshift, invert;
+};
+
 /* enumerated kcontrol */
 struct soc_enum {
 	int reg;
