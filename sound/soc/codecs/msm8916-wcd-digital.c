@@ -219,6 +219,24 @@ static const char *const dec_mux_text[] = {
 	"ZERO", "ADC1", "ADC2", "ADC3", "DMIC1", "DMIC2"
 };
 
+/* Codec supports 2 IIR filters */
+enum {
+	IIR1 = 0,
+	IIR2,
+	IIR_MAX,
+};
+
+/* Codec supports 5 bands */
+enum {
+	BAND1 = 0,
+	BAND2,
+	BAND3,
+	BAND4,
+	BAND5,
+	BAND_MAX,
+};
+
+
 static const char *const cic_mux_text[] = { "AMIC", "DMIC" };
 static const char *const rx_mix2_text[] = { "ZERO", "IIR1", "IIR2" };
 static const char *const adc2_mux_text[] = { "ZERO", "INP2", "INP3" };
