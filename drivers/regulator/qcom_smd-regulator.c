@@ -49,9 +49,19 @@ struct rpm_regulator_req {
 #define RPM_KEY_MA	0x0000616d /* "ma" */
 #define RPM_KEY_FLOOR	0x00636676 /* "vfc" */
 #define RPM_KEY_CORNER	0x6e726f63 /* "corn" */
+#define RPM_KEY_MODE 0X646D736C /* LDO mode */
 
 #define RPM_MIN_FLOOR_CORNER	0
 #define RPM_MAX_FLOOR_CORNER	6
+
+enum ldo_mode
+{
+	LDO_MODE_LPM     = 0, // Low power mode
+	LDO_MODE_BYPASS  = 1, // Bypass mode
+	LDO_MODE_AUTO    = 2, // Auto mode
+	LDO_MODE_NPM     = 4, // Normal power mode
+	LDO_MODE_INVALID
+};
 
 static int rpm_reg_write_active(struct qcom_rpm_reg *vreg,
 				struct rpm_regulator_req *req,
@@ -107,6 +117,24 @@ int qcom_rpm_set_corner(struct regulator *regulator, int corner)
 	return ret;
 }
 EXPORT_SYMBOL(qcom_rpm_set_corner);
+
+static int rpm_reg_set_mode(struct regulator_dev *rdev, unsigned int mode)
+{
+	struct qcom_rpm_reg *vreg = rdev_get_drvdata(rdev);
+	struct rpm_regulator_req req;
+	u32 val = LDO_MODE_AUTO;
+	int ret;
+	if (mode == REGULATOR_MODE_NORMAL)
+		val = LDO_MODE_NPM;
+
+	req.key = cpu_to_le32(RPM_KEY_MODE);
+	req.nbytes = cpu_to_le32(sizeof(u32));
+	req.value = cpu_to_le32(val);
+
+	ret = rpm_reg_write_active(vreg, &req, sizeof(req));
+
+	return ret;
+}
 
 static int rpm_reg_enable(struct regulator_dev *rdev)
 {
@@ -204,7 +232,7 @@ static const struct regulator_ops rpm_smps_ldo_ops_fixed = {
 	.enable = rpm_reg_enable,
 	.disable = rpm_reg_disable,
 	.is_enabled = rpm_reg_is_enabled,
-
+	.set_mode = rpm_reg_set_mode,
 	.get_voltage = rpm_reg_get_voltage,
 	.set_voltage = rpm_reg_set_voltage,
 
@@ -356,6 +384,16 @@ static const struct regulator_desc pm8916_buck_hvo_smps = {
 	.n_voltages = 32,
 	.ops = &rpm_smps_ldo_ops,
 };
+
+static unsigned int rpm_regulator_of_map_mode(unsigned int mode)
+{
+	if (mode == 1)
+		return REGULATOR_MODE_NORMAL;
+	if (mode == 2)
+		return REGULATOR_MODE_FAST;
+
+	return REGULATOR_MODE_IDLE;
+}
 
 static const struct regulator_desc pm8994_hfsmps = {
 	.linear_ranges = (struct regulator_linear_range[]) {
@@ -645,7 +683,7 @@ static int rpm_reg_probe(struct platform_device *pdev)
 		vreg->desc.name = reg->name;
 		vreg->desc.supply_name = reg->supply;
 		vreg->desc.of_match = reg->name;
-
+		vreg->desc.of_map_mode = rpm_regulator_of_map_mode;
 		config.dev = &pdev->dev;
 		config.driver_data = vreg;
 		rdev = devm_regulator_register(&pdev->dev, &vreg->desc, &config);
