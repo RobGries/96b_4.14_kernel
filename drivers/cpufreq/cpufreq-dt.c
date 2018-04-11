@@ -46,6 +46,7 @@ static struct freq_attr *cpufreq_dt_attr[] = {
 static int set_target(struct cpufreq_policy *policy, unsigned int index)
 {
 	struct private_data *priv = policy->driver_data;
+<<<<<<< HEAD
 	int ret;
 	unsigned long target_freq = policy->freq_table[index].frequency * 1000;
 
@@ -55,6 +56,18 @@ static int set_target(struct cpufreq_policy *policy, unsigned int index)
 		priv->opp_freq = target_freq;
 	mutex_unlock(&priv->lock);
 
+=======
+	unsigned long freq = policy->freq_table[index].frequency;
+	int ret;
+
+	ret = dev_pm_opp_set_rate(priv->cpu_dev, freq * 1000);
+
+	if (!ret) {
+		arch_set_freq_scale(policy->related_cpus, freq,
+				    policy->cpuinfo.max_freq);
+	}
+
+>>>>>>> source/4.15+configfs_overlay
 	return ret;
 }
 

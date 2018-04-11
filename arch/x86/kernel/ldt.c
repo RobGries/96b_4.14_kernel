@@ -221,6 +221,7 @@ static void finalize_ldt_struct(struct ldt_struct *ldt)
 
 static void install_ldt(struct mm_struct *mm, struct ldt_struct *ldt)
 {
+<<<<<<< HEAD
 	mutex_lock(&mm->context.lock);
 
 	/* Synchronizes with READ_ONCE in load_mm_ldt. */
@@ -228,6 +229,10 @@ static void install_ldt(struct mm_struct *mm, struct ldt_struct *ldt)
 
 	/* Activate the LDT for all CPUs using currents mm. */
 	on_each_cpu_mask(mm_cpumask(mm), flush_ldt, mm, true);
+=======
+	/* Synchronizes with READ_ONCE in load_mm_ldt. */
+	smp_store_release(&current_mm->context.ldt, ldt);
+>>>>>>> source/4.15+configfs_overlay
 
 	mutex_unlock(&mm->context.lock);
 }

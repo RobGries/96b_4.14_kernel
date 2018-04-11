@@ -21,6 +21,7 @@ extern struct range pfn_mapped[E820_MAX_ENTRIES];
 
 static p4d_t tmp_p4d_table[PTRS_PER_P4D] __initdata __aligned(PAGE_SIZE);
 
+<<<<<<< HEAD
 static __init void *early_alloc(size_t size, int nid, bool panic)
 {
 	if (panic)
@@ -29,6 +30,12 @@ static __init void *early_alloc(size_t size, int nid, bool panic)
 	else
 		return memblock_virt_alloc_try_nid_nopanic(size, size,
 			__pa(MAX_DMA_ADDRESS), BOOTMEM_ALLOC_ACCESSIBLE, nid);
+=======
+static __init void *early_alloc(size_t size, int nid)
+{
+	return memblock_virt_alloc_try_nid_nopanic(size, size,
+		__pa(MAX_DMA_ADDRESS), BOOTMEM_ALLOC_ACCESSIBLE, nid);
+>>>>>>> source/4.15+configfs_overlay
 }
 
 static void __init kasan_populate_pmd(pmd_t *pmd, unsigned long addr,
@@ -42,14 +49,22 @@ static void __init kasan_populate_pmd(pmd_t *pmd, unsigned long addr,
 		if (boot_cpu_has(X86_FEATURE_PSE) &&
 		    ((end - addr) == PMD_SIZE) &&
 		    IS_ALIGNED(addr, PMD_SIZE)) {
+<<<<<<< HEAD
 			p = early_alloc(PMD_SIZE, nid, false);
+=======
+			p = early_alloc(PMD_SIZE, nid);
+>>>>>>> source/4.15+configfs_overlay
 			if (p && pmd_set_huge(pmd, __pa(p), PAGE_KERNEL))
 				return;
 			else if (p)
 				memblock_free(__pa(p), PMD_SIZE);
 		}
 
+<<<<<<< HEAD
 		p = early_alloc(PAGE_SIZE, nid, true);
+=======
+		p = early_alloc(PAGE_SIZE, nid);
+>>>>>>> source/4.15+configfs_overlay
 		pmd_populate_kernel(&init_mm, pmd, p);
 	}
 
@@ -61,7 +76,11 @@ static void __init kasan_populate_pmd(pmd_t *pmd, unsigned long addr,
 		if (!pte_none(*pte))
 			continue;
 
+<<<<<<< HEAD
 		p = early_alloc(PAGE_SIZE, nid, true);
+=======
+		p = early_alloc(PAGE_SIZE, nid);
+>>>>>>> source/4.15+configfs_overlay
 		entry = pfn_pte(PFN_DOWN(__pa(p)), PAGE_KERNEL);
 		set_pte_at(&init_mm, addr, pte, entry);
 	} while (pte++, addr += PAGE_SIZE, addr != end);
@@ -79,14 +98,22 @@ static void __init kasan_populate_pud(pud_t *pud, unsigned long addr,
 		if (boot_cpu_has(X86_FEATURE_GBPAGES) &&
 		    ((end - addr) == PUD_SIZE) &&
 		    IS_ALIGNED(addr, PUD_SIZE)) {
+<<<<<<< HEAD
 			p = early_alloc(PUD_SIZE, nid, false);
+=======
+			p = early_alloc(PUD_SIZE, nid);
+>>>>>>> source/4.15+configfs_overlay
 			if (p && pud_set_huge(pud, __pa(p), PAGE_KERNEL))
 				return;
 			else if (p)
 				memblock_free(__pa(p), PUD_SIZE);
 		}
 
+<<<<<<< HEAD
 		p = early_alloc(PAGE_SIZE, nid, true);
+=======
+		p = early_alloc(PAGE_SIZE, nid);
+>>>>>>> source/4.15+configfs_overlay
 		pud_populate(&init_mm, pud, p);
 	}
 
@@ -105,7 +132,11 @@ static void __init kasan_populate_p4d(p4d_t *p4d, unsigned long addr,
 	unsigned long next;
 
 	if (p4d_none(*p4d)) {
+<<<<<<< HEAD
 		void *p = early_alloc(PAGE_SIZE, nid, true);
+=======
+		void *p = early_alloc(PAGE_SIZE, nid);
+>>>>>>> source/4.15+configfs_overlay
 
 		p4d_populate(&init_mm, p4d, p);
 	}
@@ -126,7 +157,11 @@ static void __init kasan_populate_pgd(pgd_t *pgd, unsigned long addr,
 	unsigned long next;
 
 	if (pgd_none(*pgd)) {
+<<<<<<< HEAD
 		p = early_alloc(PAGE_SIZE, nid, true);
+=======
+		p = early_alloc(PAGE_SIZE, nid);
+>>>>>>> source/4.15+configfs_overlay
 		pgd_populate(&init_mm, pgd, p);
 	}
 
@@ -327,6 +362,7 @@ void __init kasan_init(void)
 		map_range(&pfn_mapped[i]);
 	}
 
+<<<<<<< HEAD
 	shadow_cpu_entry_begin = (void *)CPU_ENTRY_AREA_BASE;
 	shadow_cpu_entry_begin = kasan_mem_to_shadow(shadow_cpu_entry_begin);
 	shadow_cpu_entry_begin = (void *)round_down((unsigned long)shadow_cpu_entry_begin,
@@ -338,6 +374,8 @@ void __init kasan_init(void)
 	shadow_cpu_entry_end = (void *)round_up((unsigned long)shadow_cpu_entry_end,
 					PAGE_SIZE);
 
+=======
+>>>>>>> source/4.15+configfs_overlay
 	kasan_populate_zero_shadow(
 		kasan_mem_to_shadow((void *)PAGE_OFFSET + MAXMEM),
 		shadow_cpu_entry_begin);

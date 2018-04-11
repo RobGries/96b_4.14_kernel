@@ -53,13 +53,17 @@ ENTRY(native_usergs_sysret64)
 END(native_usergs_sysret64)
 #endif /* CONFIG_PARAVIRT */
 
-.macro TRACE_IRQS_IRETQ
+.macro TRACE_IRQS_FLAGS flags:req
 #ifdef CONFIG_TRACE_IRQFLAGS
-	bt	$9, EFLAGS(%rsp)		/* interrupts off? */
+	bt	$9, \flags		/* interrupts off? */
 	jnc	1f
 	TRACE_IRQS_ON
 1:
 #endif
+.endm
+
+.macro TRACE_IRQS_IRETQ
+	TRACE_IRQS_FLAGS EFLAGS(%rsp)
 .endm
 
 /*
@@ -398,6 +402,7 @@ syscall_return_via_sysret:
 	popq	%rsi	/* skip rcx */
 	popq	%rdx
 	popq	%rsi
+<<<<<<< HEAD
 
 	/*
 	 * Now all regs are restored except RSP and RDI.
@@ -417,6 +422,10 @@ syscall_return_via_sysret:
 
 	popq	%rdi
 	popq	%rsp
+=======
+	popq	%rdi
+	movq	RSP-ORIG_RAX(%rsp), %rsp
+>>>>>>> source/4.15+configfs_overlay
 	USERGS_SYSRET64
 END(entry_SYSCALL_64)
 
@@ -730,6 +739,7 @@ GLOBAL(swapgs_restore_regs_and_return_to_usermode)
 	ud2
 1:
 #endif
+<<<<<<< HEAD
 	POP_EXTRA_REGS
 	popq	%r11
 	popq	%r10
@@ -767,6 +777,12 @@ GLOBAL(swapgs_restore_regs_and_return_to_usermode)
 	/* Restore RDI. */
 	popq	%rdi
 	SWAPGS
+=======
+	SWAPGS
+	POP_EXTRA_REGS
+	POP_C_REGS
+	addq	$8, %rsp	/* skip regs->orig_ax */
+>>>>>>> source/4.15+configfs_overlay
 	INTERRUPT_RETURN
 
 
@@ -1109,11 +1125,13 @@ ENTRY(native_load_gs_index)
 	FRAME_BEGIN
 	pushfq
 	DISABLE_INTERRUPTS(CLBR_ANY & ~CLBR_RDI)
+	TRACE_IRQS_OFF
 	SWAPGS
 .Lgs_change:
 	movl	%edi, %gs
 2:	ALTERNATIVE "", "mfence", X86_BUG_SWAPGS_FENCE
 	SWAPGS
+	TRACE_IRQS_FLAGS (%rsp)
 	popfq
 	FRAME_END
 	ret
@@ -1427,10 +1445,13 @@ END(error_exit)
 /*
  * Runs on exception stack.  Xen PV does not go through this path at all,
  * so we can use real assembly here.
+<<<<<<< HEAD
  *
  * Registers:
  *	%r14: Used to save/restore the CR3 of the interrupted context
  *	      when PAGE_TABLE_ISOLATION is in use.  Do not clobber.
+=======
+>>>>>>> source/4.15+configfs_overlay
  */
 ENTRY(nmi)
 	UNWIND_HINT_IRET_REGS

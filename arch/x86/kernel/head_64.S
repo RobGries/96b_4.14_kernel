@@ -386,7 +386,11 @@ NEXT_PAGE(early_dynamic_pgts)
 	.data
 
 #if defined(CONFIG_XEN_PV) || defined(CONFIG_XEN_PVH)
+<<<<<<< HEAD
 NEXT_PGD_PAGE(init_top_pgt)
+=======
+NEXT_PAGE(init_top_pgt)
+>>>>>>> source/4.15+configfs_overlay
 	.quad   level3_ident_pgt - __START_KERNEL_map + _KERNPG_TABLE_NOENC
 	.org    init_top_pgt + PGD_PAGE_OFFSET*8, 0
 	.quad   level3_ident_pgt - __START_KERNEL_map + _KERNPG_TABLE_NOENC
@@ -404,9 +408,14 @@ NEXT_PAGE(level2_ident_pgt)
 	 */
 	PMDS(0, __PAGE_KERNEL_IDENT_LARGE_EXEC, PTRS_PER_PMD)
 #else
+<<<<<<< HEAD
 NEXT_PGD_PAGE(init_top_pgt)
 	.fill	512,8,0
 	.fill	PTI_USER_PGD_FILL,8,0
+=======
+NEXT_PAGE(init_top_pgt)
+	.fill	512,8,0
+>>>>>>> source/4.15+configfs_overlay
 #endif
 
 #ifdef CONFIG_X86_5LEVEL

@@ -121,7 +121,11 @@ static enum amdgpu_ring_type amdgpu_hw_ip_to_ring_type(int hw_ip)
 
 static int amdgpu_lru_map(struct amdgpu_device *adev,
 			  struct amdgpu_queue_mapper *mapper,
+<<<<<<< HEAD
 			  u32 user_ring,
+=======
+			  int user_ring, bool lru_pipe_order,
+>>>>>>> source/4.15+configfs_overlay
 			  struct amdgpu_ring **out_ring)
 {
 	int r, i, j;
@@ -139,7 +143,7 @@ static int amdgpu_lru_map(struct amdgpu_device *adev,
 	}
 
 	r = amdgpu_ring_lru_get(adev, ring_type, ring_blacklist,
-				j, out_ring);
+				j, lru_pipe_order, out_ring);
 	if (r)
 		return r;
 
@@ -284,8 +288,10 @@ int amdgpu_queue_mgr_map(struct amdgpu_device *adev,
 		r = amdgpu_identity_map(adev, mapper, ring, out_ring);
 		break;
 	case AMDGPU_HW_IP_DMA:
+		r = amdgpu_lru_map(adev, mapper, ring, false, out_ring);
+		break;
 	case AMDGPU_HW_IP_COMPUTE:
-		r = amdgpu_lru_map(adev, mapper, ring, out_ring);
+		r = amdgpu_lru_map(adev, mapper, ring, true, out_ring);
 		break;
 	default:
 		*out_ring = NULL;

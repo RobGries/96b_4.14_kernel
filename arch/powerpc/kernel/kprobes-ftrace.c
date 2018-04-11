@@ -25,6 +25,21 @@
 #include <linux/preempt.h>
 #include <linux/ftrace.h>
 
+/*
+ * This is called from ftrace code after invoking registered handlers to
+ * disambiguate regs->nip changes done by jprobes and livepatch. We check if
+ * there is an active jprobe at the provided address (mcount location).
+ */
+int __is_active_jprobe(unsigned long addr)
+{
+	if (!preemptible()) {
+		struct kprobe *p = raw_cpu_read(current_kprobe);
+		return (p && (unsigned long)p->addr == addr) ? 1 : 0;
+	}
+
+	return 0;
+}
+
 static nokprobe_inline
 int __skip_singlestep(struct kprobe *p, struct pt_regs *regs,
 		      struct kprobe_ctlblk *kcb, unsigned long orig_nip)
@@ -60,11 +75,13 @@ void kprobe_ftrace_handler(unsigned long nip, unsigned long parent_nip,
 {
 	struct kprobe *p;
 	struct kprobe_ctlblk *kcb;
-	unsigned long flags;
 
+<<<<<<< HEAD
 	/* Disable irq for emulating a breakpoint and avoiding preempt */
 	local_irq_save(flags);
 	hard_irq_disable();
+=======
+>>>>>>> source/4.15+configfs_overlay
 	preempt_disable();
 
 	p = get_kprobe((kprobe_opcode_t *)nip);
@@ -90,16 +107,25 @@ void kprobe_ftrace_handler(unsigned long nip, unsigned long parent_nip,
 		else {
 			/*
 			 * If pre_handler returns !0, it sets regs->nip and
+<<<<<<< HEAD
 			 * resets current kprobe. In this case, we still need
 			 * to restore irq, but not preemption.
 			 */
 			local_irq_restore(flags);
+=======
+			 * resets current kprobe. In this case, we should not
+			 * re-enable preemption.
+			 */
+>>>>>>> source/4.15+configfs_overlay
 			return;
 		}
 	}
 end:
 	preempt_enable_no_resched();
+<<<<<<< HEAD
 	local_irq_restore(flags);
+=======
+>>>>>>> source/4.15+configfs_overlay
 }
 NOKPROBE_SYMBOL(kprobe_ftrace_handler);
 

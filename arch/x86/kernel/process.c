@@ -56,6 +56,7 @@ __visible DEFINE_PER_CPU_PAGE_ALIGNED(struct tss_struct, cpu_tss_rw) = {
 		 * Poison it.
 		 */
 		.sp0 = (1UL << (BITS_PER_LONG-1)) + 1,
+<<<<<<< HEAD
 
 #ifdef CONFIG_X86_64
 		/*
@@ -66,6 +67,8 @@ __visible DEFINE_PER_CPU_PAGE_ALIGNED(struct tss_struct, cpu_tss_rw) = {
 		.sp1 = TOP_OF_INIT_STACK,
 #endif
 
+=======
+>>>>>>> source/4.15+configfs_overlay
 #ifdef CONFIG_X86_32
 		.ss0 = __KERNEL_DS,
 		.ss1 = __KERNEL_CS,

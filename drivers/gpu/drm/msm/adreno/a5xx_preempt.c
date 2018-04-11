@@ -82,9 +82,15 @@ static struct msm_ringbuffer *get_next_ring(struct msm_gpu *gpu)
 	return NULL;
 }
 
+<<<<<<< HEAD
 static void a5xx_preempt_timer(unsigned long data)
 {
 	struct a5xx_gpu *a5xx_gpu = (struct a5xx_gpu *) data;
+=======
+static void a5xx_preempt_timer(struct timer_list *t)
+{
+	struct a5xx_gpu *a5xx_gpu = from_timer(a5xx_gpu, t, preempt_timer);
+>>>>>>> source/4.15+configfs_overlay
 	struct msm_gpu *gpu = &a5xx_gpu->base.base;
 	struct drm_device *dev = gpu->dev;
 	struct msm_drm_private *priv = dev->dev_private;
@@ -300,6 +306,10 @@ void a5xx_preempt_init(struct msm_gpu *gpu)
 		}
 	}
 
+<<<<<<< HEAD
 	setup_timer(&a5xx_gpu->preempt_timer, a5xx_preempt_timer,
 		(unsigned long) a5xx_gpu);
+=======
+	timer_setup(&a5xx_gpu->preempt_timer, a5xx_preempt_timer, 0);
+>>>>>>> source/4.15+configfs_overlay
 }

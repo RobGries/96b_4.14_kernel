@@ -21,52 +21,91 @@
 #include <linux/reboot.h>
 #include <linux/kprobes.h>
 #include <linux/kdebug.h>
-
 #include <linux/uaccess.h>
+#include <linux/atomic.h>
 #include <asm/dis.h>
 #include <asm/io.h>
-#include <linux/atomic.h>
 #include <asm/cpcmd.h>
 #include <asm/lowcore.h>
 #include <asm/debug.h>
 #include <asm/irq.h>
 
+/* Type of operand */
+#define OPERAND_GPR	0x1	/* Operand printed as %rx */
+#define OPERAND_FPR	0x2	/* Operand printed as %fx */
+#define OPERAND_AR	0x4	/* Operand printed as %ax */
+#define OPERAND_CR	0x8	/* Operand printed as %cx */
+#define OPERAND_VR	0x10	/* Operand printed as %vx */
+#define OPERAND_DISP	0x20	/* Operand printed as displacement */
+#define OPERAND_BASE	0x40	/* Operand printed as base register */
+#define OPERAND_INDEX	0x80	/* Operand printed as index register */
+#define OPERAND_PCREL	0x100	/* Operand printed as pc-relative symbol */
+#define OPERAND_SIGNED	0x200	/* Operand printed as signed value */
+#define OPERAND_LENGTH	0x400	/* Operand printed as length (+1) */
+
+struct s390_operand {
+	unsigned char bits;	/* The number of bits in the operand. */
+	unsigned char shift;	/* The number of bits to shift. */
+	unsigned short flags;	/* One bit syntax flags. */
+};
+
+struct s390_insn {
+	union {
+		const char name[5];
+		struct {
+			unsigned char zero;
+			unsigned int offset;
+		} __packed;
+	};
+	unsigned char opfrag;
+	unsigned char format;
+};
+
+struct s390_opcode_offset {
+	unsigned char opcode;
+	unsigned char mask;
+	unsigned char byte;
+	unsigned short offset;
+	unsigned short count;
+} __packed;
+
 enum {
-	UNUSED,	/* Indicates the end of the operand list */
-	R_8,	/* GPR starting at position 8 */
-	R_12,	/* GPR starting at position 12 */
-	R_16,	/* GPR starting at position 16 */
-	R_20,	/* GPR starting at position 20 */
-	R_24,	/* GPR starting at position 24 */
-	R_28,	/* GPR starting at position 28 */
-	R_32,	/* GPR starting at position 32 */
-	F_8,	/* FPR starting at position 8 */
-	F_12,	/* FPR starting at position 12 */
-	F_16,	/* FPR starting at position 16 */
-	F_20,	/* FPR starting at position 16 */
-	F_24,	/* FPR starting at position 24 */
-	F_28,	/* FPR starting at position 28 */
-	F_32,	/* FPR starting at position 32 */
+	UNUSED,
 	A_8,	/* Access reg. starting at position 8 */
 	A_12,	/* Access reg. starting at position 12 */
 	A_24,	/* Access reg. starting at position 24 */
 	A_28,	/* Access reg. starting at position 28 */
-	C_8,	/* Control reg. starting at position 8 */
-	C_12,	/* Control reg. starting at position 12 */
-	V_8,	/* Vector reg. starting at position 8, extension bit at 36 */
-	V_12,	/* Vector reg. starting at position 12, extension bit at 37 */
-	V_16,	/* Vector reg. starting at position 16, extension bit at 38 */
-	V_32,	/* Vector reg. starting at position 32, extension bit at 39 */
-	W_12,	/* Vector reg. at bit 12, extension at bit 37, used as index */
 	B_16,	/* Base register starting at position 16 */
 	B_32,	/* Base register starting at position 32 */
-	X_12,	/* Index register starting at position 12 */
+	C_8,	/* Control reg. starting at position 8 */
+	C_12,	/* Control reg. starting at position 12 */
+	D20_20, /* 20 bit displacement starting at 20 */
 	D_20,	/* Displacement starting at position 20 */
 	D_36,	/* Displacement starting at position 36 */
-	D20_20,	/* 20 bit displacement starting at 20 */
+	F_8,	/* FPR starting at position 8 */
+	F_12,	/* FPR starting at position 12 */
+	F_16,	/* FPR starting at position 16 */
+	F_24,	/* FPR starting at position 24 */
+	F_28,	/* FPR starting at position 28 */
+	F_32,	/* FPR starting at position 32 */
+	I8_8,	/* 8 bit signed value starting at 8 */
+	I8_32,	/* 8 bit signed value starting at 32 */
+	I16_16, /* 16 bit signed value starting at 16 */
+	I16_32, /* 16 bit signed value starting at 32 */
+	I32_16, /* 32 bit signed value starting at 16 */
+	J12_12, /* 12 bit PC relative offset at 12 */
+	J16_16, /* 16 bit PC relative offset at 16 */
+	J16_32, /* 16 bit PC relative offset at 32 */
+	J24_24, /* 24 bit PC relative offset at 24 */
+	J32_16, /* 32 bit PC relative offset at 16 */
 	L4_8,	/* 4 bit length starting at position 8 */
 	L4_12,	/* 4 bit length starting at position 12 */
 	L8_8,	/* 8 bit length starting at position 8 */
+	R_8,	/* GPR starting at position 8 */
+	R_12,	/* GPR starting at position 12 */
+	R_16,	/* GPR starting at position 16 */
+	R_24,	/* GPR starting at position 24 */
+	R_28,	/* GPR starting at position 28 */
 	U4_8,	/* 4 bit unsigned value starting at 8 */
 	U4_12,	/* 4 bit unsigned value starting at 12 */
 	U4_16,	/* 4 bit unsigned value starting at 16 */
@@ -78,151 +117,75 @@ enum {
 	U8_8,	/* 8 bit unsigned value starting at 8 */
 	U8_16,	/* 8 bit unsigned value starting at 16 */
 	U8_24,	/* 8 bit unsigned value starting at 24 */
+	U8_28,	/* 8 bit unsigned value starting at 28 */
 	U8_32,	/* 8 bit unsigned value starting at 32 */
-	I8_8,	/* 8 bit signed value starting at 8 */
-	I8_16,	/* 8 bit signed value starting at 16 */
-	I8_24,	/* 8 bit signed value starting at 24 */
-	I8_32,	/* 8 bit signed value starting at 32 */
-	J12_12, /* PC relative offset at 12 */
-	I16_16,	/* 16 bit signed value starting at 16 */
-	I16_32,	/* 32 bit signed value starting at 16 */
-	U16_16,	/* 16 bit unsigned value starting at 16 */
-	U16_32,	/* 32 bit unsigned value starting at 16 */
-	J16_16,	/* PC relative jump offset at 16 */
-	J16_32, /* PC relative offset at 16 */
-	I24_24, /* 24 bit signed value starting at 24 */
-	J32_16,	/* PC relative long offset at 16 */
-	I32_16,	/* 32 bit signed value starting at 16 */
-	U32_16,	/* 32 bit unsigned value starting at 16 */
-	M_16,	/* 4 bit optional mask starting at 16 */
-	M_20,	/* 4 bit optional mask starting at 20 */
-	M_24,	/* 4 bit optional mask starting at 24 */
-	M_28,	/* 4 bit optional mask starting at 28 */
-	M_32,	/* 4 bit optional mask starting at 32 */
-	RO_28,	/* optional GPR starting at position 28 */
+	U12_16, /* 12 bit unsigned value starting at 16 */
+	U16_16, /* 16 bit unsigned value starting at 16 */
+	U16_32, /* 16 bit unsigned value starting at 32 */
+	U32_16, /* 32 bit unsigned value starting at 16 */
+	VX_12,	/* Vector index register starting at position 12 */
+	V_8,	/* Vector reg. starting at position 8 */
+	V_12,	/* Vector reg. starting at position 12 */
+	V_16,	/* Vector reg. starting at position 16 */
+	V_32,	/* Vector reg. starting at position 32 */
+	X_12,	/* Index register starting at position 12 */
 };
 
-/*
- * Enumeration of the different instruction formats.
- * For details consult the principles of operation.
- */
-enum {
-	INSTR_INVALID,
-	INSTR_E,
-	INSTR_IE_UU,
-	INSTR_MII_UPI,
-	INSTR_RIE_R0IU, INSTR_RIE_R0UU, INSTR_RIE_RRP, INSTR_RIE_RRPU,
-	INSTR_RIE_RRUUU, INSTR_RIE_RUPI, INSTR_RIE_RUPU, INSTR_RIE_RRI0,
-	INSTR_RIL_RI, INSTR_RIL_RP, INSTR_RIL_RU, INSTR_RIL_UP,
-	INSTR_RIS_R0RDU, INSTR_RIS_R0UU, INSTR_RIS_RURDI, INSTR_RIS_RURDU,
-	INSTR_RI_RI, INSTR_RI_RP, INSTR_RI_RU, INSTR_RI_UP,
-	INSTR_RRE_00, INSTR_RRE_0R, INSTR_RRE_AA, INSTR_RRE_AR, INSTR_RRE_F0,
-	INSTR_RRE_FF, INSTR_RRE_FR, INSTR_RRE_R0, INSTR_RRE_RA, INSTR_RRE_RF,
-	INSTR_RRE_RR, INSTR_RRE_RR_OPT,
-	INSTR_RRF_0UFF, INSTR_RRF_F0FF, INSTR_RRF_F0FF2, INSTR_RRF_F0FR,
-	INSTR_RRF_FFRU, INSTR_RRF_FUFF, INSTR_RRF_FUFF2, INSTR_RRF_M0RR,
-	INSTR_RRF_R0RR,	INSTR_RRF_R0RR2, INSTR_RRF_RMRR, INSTR_RRF_RURR,
-	INSTR_RRF_U0FF,	INSTR_RRF_U0RF, INSTR_RRF_U0RR, INSTR_RRF_UUFF,
-	INSTR_RRF_UUFR, INSTR_RRF_UURF,
-	INSTR_RRR_F0FF, INSTR_RRS_RRRDU,
-	INSTR_RR_FF, INSTR_RR_R0, INSTR_RR_RR, INSTR_RR_U0, INSTR_RR_UR,
-	INSTR_RSE_CCRD, INSTR_RSE_RRRD, INSTR_RSE_RURD,
-	INSTR_RSI_RRP,
-	INSTR_RSL_LRDFU, INSTR_RSL_R0RD,
-	INSTR_RSY_AARD, INSTR_RSY_CCRD, INSTR_RSY_RRRD, INSTR_RSY_RURD,
-	INSTR_RSY_RDRM, INSTR_RSY_RMRD,
-	INSTR_RS_AARD, INSTR_RS_CCRD, INSTR_RS_R0RD, INSTR_RS_RRRD,
-	INSTR_RS_RURD,
-	INSTR_RXE_FRRD, INSTR_RXE_RRRD, INSTR_RXE_RRRDM,
-	INSTR_RXF_FRRDF,
-	INSTR_RXY_FRRD, INSTR_RXY_RRRD, INSTR_RXY_URRD,
-	INSTR_RX_FRRD, INSTR_RX_RRRD, INSTR_RX_URRD,
-	INSTR_SIL_RDI, INSTR_SIL_RDU,
-	INSTR_SIY_IRD, INSTR_SIY_URD,
-	INSTR_SI_URD,
-	INSTR_SMI_U0RDP,
-	INSTR_SSE_RDRD,
-	INSTR_SSF_RRDRD, INSTR_SSF_RRDRD2,
-	INSTR_SS_L0RDRD, INSTR_SS_LIRDRD, INSTR_SS_LLRDRD, INSTR_SS_RRRDRD,
-	INSTR_SS_RRRDRD2, INSTR_SS_RRRDRD3,
-	INSTR_S_00, INSTR_S_RD,
-	INSTR_VRI_V0IM, INSTR_VRI_V0I0, INSTR_VRI_V0IIM, INSTR_VRI_VVIM,
-	INSTR_VRI_VVV0IM, INSTR_VRI_VVV0I0, INSTR_VRI_VVIMM,
-	INSTR_VRR_VV00MMM, INSTR_VRR_VV000MM, INSTR_VRR_VV0000M,
-	INSTR_VRR_VV00000, INSTR_VRR_VVV0M0M, INSTR_VRR_VV00M0M,
-	INSTR_VRR_VVV000M, INSTR_VRR_VVV000V, INSTR_VRR_VVV0000,
-	INSTR_VRR_VVV0MMM, INSTR_VRR_VVV00MM, INSTR_VRR_VVVMM0V,
-	INSTR_VRR_VVVM0MV, INSTR_VRR_VVVM00V, INSTR_VRR_VRR0000,
-	INSTR_VRS_VVRDM, INSTR_VRS_VVRD0, INSTR_VRS_VRRDM, INSTR_VRS_VRRD0,
-	INSTR_VRS_RVRDM,
-	INSTR_VRV_VVRDM, INSTR_VRV_VWRDM,
-	INSTR_VRX_VRRDM, INSTR_VRX_VRRD0,
-};
-
-static const struct s390_operand operands[] =
-{
-	[UNUSED]  = { 0, 0, 0 },
-	[R_8]	 = {  4,  8, OPERAND_GPR },
-	[R_12]	 = {  4, 12, OPERAND_GPR },
-	[R_16]	 = {  4, 16, OPERAND_GPR },
-	[R_20]	 = {  4, 20, OPERAND_GPR },
-	[R_24]	 = {  4, 24, OPERAND_GPR },
-	[R_28]	 = {  4, 28, OPERAND_GPR },
-	[R_32]	 = {  4, 32, OPERAND_GPR },
-	[F_8]	 = {  4,  8, OPERAND_FPR },
-	[F_12]	 = {  4, 12, OPERAND_FPR },
-	[F_16]	 = {  4, 16, OPERAND_FPR },
-	[F_20]	 = {  4, 16, OPERAND_FPR },
-	[F_24]	 = {  4, 24, OPERAND_FPR },
-	[F_28]	 = {  4, 28, OPERAND_FPR },
-	[F_32]	 = {  4, 32, OPERAND_FPR },
+static const struct s390_operand operands[] = {
+	[UNUSED] = {  0,  0, 0 },
 	[A_8]	 = {  4,  8, OPERAND_AR },
 	[A_12]	 = {  4, 12, OPERAND_AR },
 	[A_24]	 = {  4, 24, OPERAND_AR },
 	[A_28]	 = {  4, 28, OPERAND_AR },
-	[C_8]	 = {  4,  8, OPERAND_CR },
-	[C_12]	 = {  4, 12, OPERAND_CR },
-	[V_8]	 = {  4,  8, OPERAND_VR },
-	[V_12]	 = {  4, 12, OPERAND_VR },
-	[V_16]	 = {  4, 16, OPERAND_VR },
-	[V_32]	 = {  4, 32, OPERAND_VR },
-	[W_12]	 = {  4, 12, OPERAND_INDEX | OPERAND_VR },
 	[B_16]	 = {  4, 16, OPERAND_BASE | OPERAND_GPR },
 	[B_32]	 = {  4, 32, OPERAND_BASE | OPERAND_GPR },
-	[X_12]	 = {  4, 12, OPERAND_INDEX | OPERAND_GPR },
+	[C_8]	 = {  4,  8, OPERAND_CR },
+	[C_12]	 = {  4, 12, OPERAND_CR },
+	[D20_20] = { 20, 20, OPERAND_DISP | OPERAND_SIGNED },
 	[D_20]	 = { 12, 20, OPERAND_DISP },
 	[D_36]	 = { 12, 36, OPERAND_DISP },
-	[D20_20] = { 20, 20, OPERAND_DISP | OPERAND_SIGNED },
-	[L4_8]	 = {  4,  8, OPERAND_LENGTH },
-	[L4_12]  = {  4, 12, OPERAND_LENGTH },
-	[L8_8]	 = {  8,  8, OPERAND_LENGTH },
-	[U4_8]	 = {  4,  8, 0 },
-	[U4_12]  = {  4, 12, 0 },
-	[U4_16]  = {  4, 16, 0 },
-	[U4_20]  = {  4, 20, 0 },
-	[U4_24]  = {  4, 24, 0 },
-	[U4_28]  = {  4, 28, 0 },
-	[U4_32]  = {  4, 32, 0 },
-	[U4_36]  = {  4, 36, 0 },
-	[U8_8]	 = {  8,  8, 0 },
-	[U8_16]  = {  8, 16, 0 },
-	[U8_24]  = {  8, 24, 0 },
-	[U8_32]  = {  8, 32, 0 },
-	[J12_12] = { 12, 12, OPERAND_PCREL },
+	[F_8]	 = {  4,  8, OPERAND_FPR },
+	[F_12]	 = {  4, 12, OPERAND_FPR },
+	[F_16]	 = {  4, 16, OPERAND_FPR },
+	[F_24]	 = {  4, 24, OPERAND_FPR },
+	[F_28]	 = {  4, 28, OPERAND_FPR },
+	[F_32]	 = {  4, 32, OPERAND_FPR },
 	[I8_8]	 = {  8,  8, OPERAND_SIGNED },
-	[I8_16]  = {  8, 16, OPERAND_SIGNED },
-	[I8_24]  = {  8, 24, OPERAND_SIGNED },
-	[I8_32]  = {  8, 32, OPERAND_SIGNED },
-	[I16_32] = { 16, 32, OPERAND_SIGNED },
+	[I8_32]	 = {  8, 32, OPERAND_SIGNED },
 	[I16_16] = { 16, 16, OPERAND_SIGNED },
-	[U16_16] = { 16, 16, 0 },
-	[U16_32] = { 16, 32, 0 },
+	[I16_32] = { 16, 32, OPERAND_SIGNED },
+	[I32_16] = { 32, 16, OPERAND_SIGNED },
+	[J12_12] = { 12, 12, OPERAND_PCREL },
 	[J16_16] = { 16, 16, OPERAND_PCREL },
 	[J16_32] = { 16, 32, OPERAND_PCREL },
-	[I24_24] = { 24, 24, OPERAND_SIGNED },
+	[J24_24] = { 24, 24, OPERAND_PCREL },
 	[J32_16] = { 32, 16, OPERAND_PCREL },
-	[I32_16] = { 32, 16, OPERAND_SIGNED },
+	[L4_8]	 = {  4,  8, OPERAND_LENGTH },
+	[L4_12]	 = {  4, 12, OPERAND_LENGTH },
+	[L8_8]	 = {  8,  8, OPERAND_LENGTH },
+	[R_8]	 = {  4,  8, OPERAND_GPR },
+	[R_12]	 = {  4, 12, OPERAND_GPR },
+	[R_16]	 = {  4, 16, OPERAND_GPR },
+	[R_24]	 = {  4, 24, OPERAND_GPR },
+	[R_28]	 = {  4, 28, OPERAND_GPR },
+	[U4_8]	 = {  4,  8, 0 },
+	[U4_12]	 = {  4, 12, 0 },
+	[U4_16]	 = {  4, 16, 0 },
+	[U4_20]	 = {  4, 20, 0 },
+	[U4_24]	 = {  4, 24, 0 },
+	[U4_28]	 = {  4, 28, 0 },
+	[U4_32]	 = {  4, 32, 0 },
+	[U4_36]	 = {  4, 36, 0 },
+	[U8_8]	 = {  8,  8, 0 },
+	[U8_16]	 = {  8, 16, 0 },
+	[U8_24]	 = {  8, 24, 0 },
+	[U8_28]	 = {  8, 28, 0 },
+	[U8_32]	 = {  8, 32, 0 },
+	[U12_16] = { 12, 16, 0 },
+	[U16_16] = { 16, 16, 0 },
+	[U16_32] = { 16, 32, 0 },
 	[U32_16] = { 32, 16, 0 },
+<<<<<<< HEAD
 	[M_16]	 = {  4, 16, 0 },
 	[M_20]	 = {  4, 20, 0 },
 	[M_24]	 = {  4, 24, 0 },
@@ -1622,108 +1585,160 @@ static struct s390_insn opcode_eb[] = {
 	{ "mvclu", 0x8e, INSTR_RSY_RRRD },
 	{ "tp", 0xc0, INSTR_RSL_R0RD },
 	{ "", 0, INSTR_INVALID }
+=======
+	[VX_12]	 = {  4, 12, OPERAND_INDEX | OPERAND_VR },
+	[V_8]	 = {  4,  8, OPERAND_VR },
+	[V_12]	 = {  4, 12, OPERAND_VR },
+	[V_16]	 = {  4, 16, OPERAND_VR },
+	[V_32]	 = {  4, 32, OPERAND_VR },
+	[X_12]	 = {  4, 12, OPERAND_INDEX | OPERAND_GPR },
+>>>>>>> source/4.15+configfs_overlay
 };
 
-static struct s390_insn opcode_ec[] = {
-	{ "brxhg", 0x44, INSTR_RIE_RRP },
-	{ "brxlg", 0x45, INSTR_RIE_RRP },
-	{ { 0, LONG_INSN_RISBLG }, 0x51, INSTR_RIE_RRUUU },
-	{ "rnsbg", 0x54, INSTR_RIE_RRUUU },
-	{ "risbg", 0x55, INSTR_RIE_RRUUU },
-	{ "rosbg", 0x56, INSTR_RIE_RRUUU },
-	{ "rxsbg", 0x57, INSTR_RIE_RRUUU },
-	{ { 0, LONG_INSN_RISBGN }, 0x59, INSTR_RIE_RRUUU },
-	{ { 0, LONG_INSN_RISBHG }, 0x5D, INSTR_RIE_RRUUU },
-	{ "cgrj", 0x64, INSTR_RIE_RRPU },
-	{ "clgrj", 0x65, INSTR_RIE_RRPU },
-	{ "cgit", 0x70, INSTR_RIE_R0IU },
-	{ "clgit", 0x71, INSTR_RIE_R0UU },
-	{ "cit", 0x72, INSTR_RIE_R0IU },
-	{ "clfit", 0x73, INSTR_RIE_R0UU },
-	{ "crj", 0x76, INSTR_RIE_RRPU },
-	{ "clrj", 0x77, INSTR_RIE_RRPU },
-	{ "cgij", 0x7c, INSTR_RIE_RUPI },
-	{ "clgij", 0x7d, INSTR_RIE_RUPU },
-	{ "cij", 0x7e, INSTR_RIE_RUPI },
-	{ "clij", 0x7f, INSTR_RIE_RUPU },
-	{ "ahik", 0xd8, INSTR_RIE_RRI0 },
-	{ "aghik", 0xd9, INSTR_RIE_RRI0 },
-	{ { 0, LONG_INSN_ALHSIK }, 0xda, INSTR_RIE_RRI0 },
-	{ { 0, LONG_INSN_ALGHSIK }, 0xdb, INSTR_RIE_RRI0 },
-	{ "cgrb", 0xe4, INSTR_RRS_RRRDU },
-	{ "clgrb", 0xe5, INSTR_RRS_RRRDU },
-	{ "crb", 0xf6, INSTR_RRS_RRRDU },
-	{ "clrb", 0xf7, INSTR_RRS_RRRDU },
-	{ "cgib", 0xfc, INSTR_RIS_RURDI },
-	{ "clgib", 0xfd, INSTR_RIS_RURDU },
-	{ "cib", 0xfe, INSTR_RIS_RURDI },
-	{ "clib", 0xff, INSTR_RIS_RURDU },
-	{ "", 0, INSTR_INVALID }
+static const unsigned char formats[][6] = {
+	[INSTR_E]	     = { 0, 0, 0, 0, 0, 0 },
+	[INSTR_IE_UU]	     = { U4_24, U4_28, 0, 0, 0, 0 },
+	[INSTR_MII_UPP]	     = { U4_8, J12_12, J24_24 },
+	[INSTR_RIE_R0IU]     = { R_8, I16_16, U4_32, 0, 0, 0 },
+	[INSTR_RIE_R0UU]     = { R_8, U16_16, U4_32, 0, 0, 0 },
+	[INSTR_RIE_RRI0]     = { R_8, R_12, I16_16, 0, 0, 0 },
+	[INSTR_RIE_RRP]	     = { R_8, R_12, J16_16, 0, 0, 0 },
+	[INSTR_RIE_RRPU]     = { R_8, R_12, U4_32, J16_16, 0, 0 },
+	[INSTR_RIE_RRUUU]    = { R_8, R_12, U8_16, U8_24, U8_32, 0 },
+	[INSTR_RIE_RUI0]     = { R_8, I16_16, U4_12, 0, 0, 0 },
+	[INSTR_RIE_RUPI]     = { R_8, I8_32, U4_12, J16_16, 0, 0 },
+	[INSTR_RIE_RUPU]     = { R_8, U8_32, U4_12, J16_16, 0, 0 },
+	[INSTR_RIL_RI]	     = { R_8, I32_16, 0, 0, 0, 0 },
+	[INSTR_RIL_RP]	     = { R_8, J32_16, 0, 0, 0, 0 },
+	[INSTR_RIL_RU]	     = { R_8, U32_16, 0, 0, 0, 0 },
+	[INSTR_RIL_UP]	     = { U4_8, J32_16, 0, 0, 0, 0 },
+	[INSTR_RIS_RURDI]    = { R_8, I8_32, U4_12, D_20, B_16, 0 },
+	[INSTR_RIS_RURDU]    = { R_8, U8_32, U4_12, D_20, B_16, 0 },
+	[INSTR_RI_RI]	     = { R_8, I16_16, 0, 0, 0, 0 },
+	[INSTR_RI_RP]	     = { R_8, J16_16, 0, 0, 0, 0 },
+	[INSTR_RI_RU]	     = { R_8, U16_16, 0, 0, 0, 0 },
+	[INSTR_RI_UP]	     = { U4_8, J16_16, 0, 0, 0, 0 },
+	[INSTR_RRE_00]	     = { 0, 0, 0, 0, 0, 0 },
+	[INSTR_RRE_AA]	     = { A_24, A_28, 0, 0, 0, 0 },
+	[INSTR_RRE_AR]	     = { A_24, R_28, 0, 0, 0, 0 },
+	[INSTR_RRE_F0]	     = { F_24, 0, 0, 0, 0, 0 },
+	[INSTR_RRE_FF]	     = { F_24, F_28, 0, 0, 0, 0 },
+	[INSTR_RRE_FR]	     = { F_24, R_28, 0, 0, 0, 0 },
+	[INSTR_RRE_R0]	     = { R_24, 0, 0, 0, 0, 0 },
+	[INSTR_RRE_RA]	     = { R_24, A_28, 0, 0, 0, 0 },
+	[INSTR_RRE_RF]	     = { R_24, F_28, 0, 0, 0, 0 },
+	[INSTR_RRE_RR]	     = { R_24, R_28, 0, 0, 0, 0 },
+	[INSTR_RRF_0UFF]     = { F_24, F_28, U4_20, 0, 0, 0 },
+	[INSTR_RRF_0URF]     = { R_24, F_28, U4_20, 0, 0, 0 },
+	[INSTR_RRF_F0FF]     = { F_16, F_24, F_28, 0, 0, 0 },
+	[INSTR_RRF_F0FF2]    = { F_24, F_16, F_28, 0, 0, 0 },
+	[INSTR_RRF_F0FR]     = { F_24, F_16, R_28, 0, 0, 0 },
+	[INSTR_RRF_FFRU]     = { F_24, F_16, R_28, U4_20, 0, 0 },
+	[INSTR_RRF_FUFF]     = { F_24, F_16, F_28, U4_20, 0, 0 },
+	[INSTR_RRF_FUFF2]    = { F_24, F_28, F_16, U4_20, 0, 0 },
+	[INSTR_RRF_R0RR]     = { R_24, R_16, R_28, 0, 0, 0 },
+	[INSTR_RRF_R0RR2]    = { R_24, R_28, R_16, 0, 0, 0 },
+	[INSTR_RRF_RURR]     = { R_24, R_28, R_16, U4_20, 0, 0 },
+	[INSTR_RRF_RURR2]    = { R_24, R_16, R_28, U4_20, 0, 0 },
+	[INSTR_RRF_U0FF]     = { F_24, U4_16, F_28, 0, 0, 0 },
+	[INSTR_RRF_U0RF]     = { R_24, U4_16, F_28, 0, 0, 0 },
+	[INSTR_RRF_U0RR]     = { R_24, R_28, U4_16, 0, 0, 0 },
+	[INSTR_RRF_UUFF]     = { F_24, U4_16, F_28, U4_20, 0, 0 },
+	[INSTR_RRF_UUFR]     = { F_24, U4_16, R_28, U4_20, 0, 0 },
+	[INSTR_RRF_UURF]     = { R_24, U4_16, F_28, U4_20, 0, 0 },
+	[INSTR_RRS_RRRDU]    = { R_8, R_12, U4_32, D_20, B_16 },
+	[INSTR_RR_FF]	     = { F_8, F_12, 0, 0, 0, 0 },
+	[INSTR_RR_R0]	     = { R_8,  0, 0, 0, 0, 0 },
+	[INSTR_RR_RR]	     = { R_8, R_12, 0, 0, 0, 0 },
+	[INSTR_RR_U0]	     = { U8_8,	0, 0, 0, 0, 0 },
+	[INSTR_RR_UR]	     = { U4_8, R_12, 0, 0, 0, 0 },
+	[INSTR_RSI_RRP]	     = { R_8, R_12, J16_16, 0, 0, 0 },
+	[INSTR_RSL_LRDFU]    = { F_32, D_20, L8_8, B_16, U4_36, 0 },
+	[INSTR_RSL_R0RD]     = { D_20, L4_8, B_16, 0, 0, 0 },
+	[INSTR_RSY_AARD]     = { A_8, A_12, D20_20, B_16, 0, 0 },
+	[INSTR_RSY_CCRD]     = { C_8, C_12, D20_20, B_16, 0, 0 },
+	[INSTR_RSY_RDRU]     = { R_8, D20_20, B_16, U4_12, 0, 0 },
+	[INSTR_RSY_RRRD]     = { R_8, R_12, D20_20, B_16, 0, 0 },
+	[INSTR_RSY_RURD]     = { R_8, U4_12, D20_20, B_16, 0, 0 },
+	[INSTR_RSY_RURD2]    = { R_8, D20_20, B_16, U4_12, 0, 0 },
+	[INSTR_RS_AARD]	     = { A_8, A_12, D_20, B_16, 0, 0 },
+	[INSTR_RS_CCRD]	     = { C_8, C_12, D_20, B_16, 0, 0 },
+	[INSTR_RS_R0RD]	     = { R_8, D_20, B_16, 0, 0, 0 },
+	[INSTR_RS_RRRD]	     = { R_8, R_12, D_20, B_16, 0, 0 },
+	[INSTR_RS_RURD]	     = { R_8, U4_12, D_20, B_16, 0, 0 },
+	[INSTR_RXE_FRRD]     = { F_8, D_20, X_12, B_16, 0, 0 },
+	[INSTR_RXE_RRRDU]    = { R_8, D_20, X_12, B_16, U4_32, 0 },
+	[INSTR_RXF_FRRDF]    = { F_32, F_8, D_20, X_12, B_16, 0 },
+	[INSTR_RXY_FRRD]     = { F_8, D20_20, X_12, B_16, 0, 0 },
+	[INSTR_RXY_RRRD]     = { R_8, D20_20, X_12, B_16, 0, 0 },
+	[INSTR_RXY_URRD]     = { U4_8, D20_20, X_12, B_16, 0, 0 },
+	[INSTR_RX_FRRD]	     = { F_8, D_20, X_12, B_16, 0, 0 },
+	[INSTR_RX_RRRD]	     = { R_8, D_20, X_12, B_16, 0, 0 },
+	[INSTR_RX_URRD]	     = { U4_8, D_20, X_12, B_16, 0, 0 },
+	[INSTR_SIL_RDI]	     = { D_20, B_16, I16_32, 0, 0, 0 },
+	[INSTR_SIL_RDU]	     = { D_20, B_16, U16_32, 0, 0, 0 },
+	[INSTR_SIY_IRD]	     = { D20_20, B_16, I8_8, 0, 0, 0 },
+	[INSTR_SIY_URD]	     = { D20_20, B_16, U8_8, 0, 0, 0 },
+	[INSTR_SI_RD]	     = { D_20, B_16, 0, 0, 0, 0 },
+	[INSTR_SI_URD]	     = { D_20, B_16, U8_8, 0, 0, 0 },
+	[INSTR_SMI_U0RDP]    = { U4_8, J16_32, D_20, B_16, 0, 0 },
+	[INSTR_SSE_RDRD]     = { D_20, B_16, D_36, B_32, 0, 0 },
+	[INSTR_SSF_RRDRD]    = { D_20, B_16, D_36, B_32, R_8, 0 },
+	[INSTR_SSF_RRDRD2]   = { R_8, D_20, B_16, D_36, B_32, 0 },
+	[INSTR_SS_L0RDRD]    = { D_20, L8_8, B_16, D_36, B_32, 0 },
+	[INSTR_SS_L2RDRD]    = { D_20, B_16, D_36, L8_8, B_32, 0 },
+	[INSTR_SS_LIRDRD]    = { D_20, L4_8, B_16, D_36, B_32, U4_12 },
+	[INSTR_SS_LLRDRD]    = { D_20, L4_8, B_16, D_36, L4_12, B_32 },
+	[INSTR_SS_RRRDRD]    = { D_20, R_8, B_16, D_36, B_32, R_12 },
+	[INSTR_SS_RRRDRD2]   = { R_8, D_20, B_16, R_12, D_36, B_32 },
+	[INSTR_SS_RRRDRD3]   = { R_8, R_12, D_20, B_16, D_36, B_32 },
+	[INSTR_S_00]	     = { 0, 0, 0, 0, 0, 0 },
+	[INSTR_S_RD]	     = { D_20, B_16, 0, 0, 0, 0 },
+	[INSTR_VRI_V0IU]     = { V_8, I16_16, U4_32, 0, 0, 0 },
+	[INSTR_VRI_V0U]	     = { V_8, U16_16, 0, 0, 0, 0 },
+	[INSTR_VRI_V0UU2]    = { V_8, U16_16, U4_32, 0, 0, 0 },
+	[INSTR_VRI_V0UUU]    = { V_8, U8_16, U8_24, U4_32, 0, 0 },
+	[INSTR_VRI_VR0UU]    = { V_8, R_12, U8_28, U4_24, 0, 0 },
+	[INSTR_VRI_VVUU]     = { V_8, V_12, U16_16, U4_32, 0, 0 },
+	[INSTR_VRI_VVUUU]    = { V_8, V_12, U12_16, U4_32, U4_28, 0 },
+	[INSTR_VRI_VVUUU2]   = { V_8, V_12, U8_28, U8_16, U4_24, 0 },
+	[INSTR_VRI_VVV0U]    = { V_8, V_12, V_16, U8_24, 0, 0 },
+	[INSTR_VRI_VVV0UU]   = { V_8, V_12, V_16, U8_24, U4_32, 0 },
+	[INSTR_VRI_VVV0UU2]  = { V_8, V_12, V_16, U8_28, U4_24, 0 },
+	[INSTR_VRR_0V]	     = { V_12, 0, 0, 0, 0, 0 },
+	[INSTR_VRR_0VV0U]    = { V_12, V_16, U4_24, 0, 0, 0 },
+	[INSTR_VRR_RV0U]     = { R_8, V_12, U4_24, 0, 0, 0 },
+	[INSTR_VRR_VRR]	     = { V_8, R_12, R_16, 0, 0, 0 },
+	[INSTR_VRR_VV]	     = { V_8, V_12, 0, 0, 0, 0 },
+	[INSTR_VRR_VV0U]     = { V_8, V_12, U4_32, 0, 0, 0 },
+	[INSTR_VRR_VV0U0U]   = { V_8, V_12, U4_32, U4_24, 0, 0 },
+	[INSTR_VRR_VV0UU2]   = { V_8, V_12, U4_32, U4_28, 0, 0 },
+	[INSTR_VRR_VV0UUU]   = { V_8, V_12, U4_32, U4_28, U4_24, 0 },
+	[INSTR_VRR_VVV]	     = { V_8, V_12, V_16, 0, 0, 0 },
+	[INSTR_VRR_VVV0U]    = { V_8, V_12, V_16, U4_32, 0, 0 },
+	[INSTR_VRR_VVV0U0U]  = { V_8, V_12, V_16, U4_32, U4_24, 0 },
+	[INSTR_VRR_VVV0UU]   = { V_8, V_12, V_16, U4_32, U4_28, 0 },
+	[INSTR_VRR_VVV0UUU]  = { V_8, V_12, V_16, U4_32, U4_28, U4_24 },
+	[INSTR_VRR_VVV0V]    = { V_8, V_12, V_16, V_32, 0, 0 },
+	[INSTR_VRR_VVVU0UV]  = { V_8, V_12, V_16, V_32, U4_28, U4_20 },
+	[INSTR_VRR_VVVU0V]   = { V_8, V_12, V_16, V_32, U4_20, 0 },
+	[INSTR_VRR_VVVUU0V]  = { V_8, V_12, V_16, V_32, U4_20, U4_24 },
+	[INSTR_VRS_RRDV]     = { V_32, R_12, D_20, B_16, 0, 0 },
+	[INSTR_VRS_RVRDU]    = { R_8, V_12, D_20, B_16, U4_32, 0 },
+	[INSTR_VRS_VRRD]     = { V_8, R_12, D_20, B_16, 0, 0 },
+	[INSTR_VRS_VRRDU]    = { V_8, R_12, D_20, B_16, U4_32, 0 },
+	[INSTR_VRS_VVRD]     = { V_8, V_12, D_20, B_16, 0, 0 },
+	[INSTR_VRS_VVRDU]    = { V_8, V_12, D_20, B_16, U4_32, 0 },
+	[INSTR_VRV_VVXRDU]   = { V_8, D_20, VX_12, B_16, U4_32, 0 },
+	[INSTR_VRX_VRRD]     = { V_8, D_20, X_12, B_16, 0, 0 },
+	[INSTR_VRX_VRRDU]    = { V_8, D_20, X_12, B_16, U4_32, 0 },
+	[INSTR_VRX_VV]	     = { V_8, V_12, 0, 0, 0, 0 },
+	[INSTR_VSI_URDV]     = { V_32, D_20, B_16, U8_8, 0, 0 },
 };
 
-static struct s390_insn opcode_ed[] = {
-	{ "mayl", 0x38, INSTR_RXF_FRRDF },
-	{ "myl", 0x39, INSTR_RXF_FRRDF },
-	{ "may", 0x3a, INSTR_RXF_FRRDF },
-	{ "my", 0x3b, INSTR_RXF_FRRDF },
-	{ "mayh", 0x3c, INSTR_RXF_FRRDF },
-	{ "myh", 0x3d, INSTR_RXF_FRRDF },
-	{ "sldt", 0x40, INSTR_RXF_FRRDF },
-	{ "srdt", 0x41, INSTR_RXF_FRRDF },
-	{ "slxt", 0x48, INSTR_RXF_FRRDF },
-	{ "srxt", 0x49, INSTR_RXF_FRRDF },
-	{ "tdcet", 0x50, INSTR_RXE_FRRD },
-	{ "tdget", 0x51, INSTR_RXE_FRRD },
-	{ "tdcdt", 0x54, INSTR_RXE_FRRD },
-	{ "tdgdt", 0x55, INSTR_RXE_FRRD },
-	{ "tdcxt", 0x58, INSTR_RXE_FRRD },
-	{ "tdgxt", 0x59, INSTR_RXE_FRRD },
-	{ "ley", 0x64, INSTR_RXY_FRRD },
-	{ "ldy", 0x65, INSTR_RXY_FRRD },
-	{ "stey", 0x66, INSTR_RXY_FRRD },
-	{ "stdy", 0x67, INSTR_RXY_FRRD },
-	{ "czdt", 0xa8, INSTR_RSL_LRDFU },
-	{ "czxt", 0xa9, INSTR_RSL_LRDFU },
-	{ "cdzt", 0xaa, INSTR_RSL_LRDFU },
-	{ "cxzt", 0xab, INSTR_RSL_LRDFU },
-	{ "ldeb", 0x04, INSTR_RXE_FRRD },
-	{ "lxdb", 0x05, INSTR_RXE_FRRD },
-	{ "lxeb", 0x06, INSTR_RXE_FRRD },
-	{ "mxdb", 0x07, INSTR_RXE_FRRD },
-	{ "keb", 0x08, INSTR_RXE_FRRD },
-	{ "ceb", 0x09, INSTR_RXE_FRRD },
-	{ "aeb", 0x0a, INSTR_RXE_FRRD },
-	{ "seb", 0x0b, INSTR_RXE_FRRD },
-	{ "mdeb", 0x0c, INSTR_RXE_FRRD },
-	{ "deb", 0x0d, INSTR_RXE_FRRD },
-	{ "maeb", 0x0e, INSTR_RXF_FRRDF },
-	{ "mseb", 0x0f, INSTR_RXF_FRRDF },
-	{ "tceb", 0x10, INSTR_RXE_FRRD },
-	{ "tcdb", 0x11, INSTR_RXE_FRRD },
-	{ "tcxb", 0x12, INSTR_RXE_FRRD },
-	{ "sqeb", 0x14, INSTR_RXE_FRRD },
-	{ "sqdb", 0x15, INSTR_RXE_FRRD },
-	{ "meeb", 0x17, INSTR_RXE_FRRD },
-	{ "kdb", 0x18, INSTR_RXE_FRRD },
-	{ "cdb", 0x19, INSTR_RXE_FRRD },
-	{ "adb", 0x1a, INSTR_RXE_FRRD },
-	{ "sdb", 0x1b, INSTR_RXE_FRRD },
-	{ "mdb", 0x1c, INSTR_RXE_FRRD },
-	{ "ddb", 0x1d, INSTR_RXE_FRRD },
-	{ "madb", 0x1e, INSTR_RXF_FRRDF },
-	{ "msdb", 0x1f, INSTR_RXF_FRRDF },
-	{ "lde", 0x24, INSTR_RXE_FRRD },
-	{ "lxd", 0x25, INSTR_RXE_FRRD },
-	{ "lxe", 0x26, INSTR_RXE_FRRD },
-	{ "mae", 0x2e, INSTR_RXF_FRRDF },
-	{ "mse", 0x2f, INSTR_RXF_FRRDF },
-	{ "sqe", 0x34, INSTR_RXE_FRRD },
-	{ "sqd", 0x35, INSTR_RXE_FRRD },
-	{ "mee", 0x37, INSTR_RXE_FRRD },
-	{ "mad", 0x3e, INSTR_RXF_FRRDF },
-	{ "msd", 0x3f, INSTR_RXF_FRRDF },
-	{ "", 0, INSTR_INVALID }
-};
+static char long_insn_name[][7] = LONG_INSN_INITIALIZER;
+static struct s390_insn opcode[] = OPCODE_TABLE_INITIALIZER;
+static struct s390_opcode_offset opcode_offset[] = OPCODE_OFFSET_INITIALIZER;
 
 /* Extracts an operand value from an instruction.  */
 static unsigned int extract_operand(unsigned char *code,
@@ -1778,114 +1793,27 @@ static unsigned int extract_operand(unsigned char *code,
 
 struct s390_insn *find_insn(unsigned char *code)
 {
-	unsigned char opfrag = code[1];
-	unsigned char opmask;
-	struct s390_insn *table;
+	struct s390_opcode_offset *entry;
+	struct s390_insn *insn;
+	unsigned char opfrag;
+	int i;
 
-	switch (code[0]) {
-	case 0x01:
-		table = opcode_01;
-		break;
-	case 0xa5:
-		table = opcode_a5;
-		break;
-	case 0xa7:
-		table = opcode_a7;
-		break;
-	case 0xaa:
-		table = opcode_aa;
-		break;
-	case 0xb2:
-		table = opcode_b2;
-		break;
-	case 0xb3:
-		table = opcode_b3;
-		break;
-	case 0xb9:
-		table = opcode_b9;
-		break;
-	case 0xc0:
-		table = opcode_c0;
-		break;
-	case 0xc2:
-		table = opcode_c2;
-		break;
-	case 0xc4:
-		table = opcode_c4;
-		break;
-	case 0xc6:
-		table = opcode_c6;
-		break;
-	case 0xc8:
-		table = opcode_c8;
-		break;
-	case 0xcc:
-		table = opcode_cc;
-		break;
-	case 0xe3:
-		table = opcode_e3;
-		opfrag = code[5];
-		break;
-	case 0xe5:
-		table = opcode_e5;
-		break;
-	case 0xe7:
-		table = opcode_e7;
-		opfrag = code[5];
-		break;
-	case 0xeb:
-		table = opcode_eb;
-		opfrag = code[5];
-		break;
-	case 0xec:
-		table = opcode_ec;
-		opfrag = code[5];
-		break;
-	case 0xed:
-		table = opcode_ed;
-		opfrag = code[5];
-		break;
-	default:
-		table = opcode;
-		opfrag = code[0];
-		break;
+	for (i = 0; i < ARRAY_SIZE(opcode_offset); i++) {
+		entry = &opcode_offset[i];
+		if (entry->opcode == code[0] || entry->opcode == 0)
+			break;
 	}
-	while (table->format != INSTR_INVALID) {
-		opmask = formats[table->format][0];
-		if (table->opfrag == (opfrag & opmask))
-			return table;
-		table++;
+
+	opfrag = *(code + entry->byte) & entry->mask;
+
+	insn = &opcode[entry->offset];
+	for (i = 0; i < entry->count; i++) {
+		if (insn->opfrag == opfrag)
+			return insn;
+		insn++;
 	}
 	return NULL;
 }
-
-/**
- * insn_to_mnemonic - decode an s390 instruction
- * @instruction: instruction to decode
- * @buf: buffer to fill with mnemonic
- * @len: length of buffer
- *
- * Decode the instruction at @instruction and store the corresponding
- * mnemonic into @buf of length @len.
- * @buf is left unchanged if the instruction could not be decoded.
- * Returns:
- *  %0 on success, %-ENOENT if the instruction was not found.
- */
-int insn_to_mnemonic(unsigned char *instruction, char *buf, unsigned int len)
-{
-	struct s390_insn *insn;
-
-	insn = find_insn(instruction);
-	if (!insn)
-		return -ENOENT;
-	if (insn->name[0] == '\0')
-		snprintf(buf, len, "%s",
-			 long_insn_name[(int) insn->name[1]]);
-	else
-		snprintf(buf, len, "%.5s", insn->name);
-	return 0;
-}
-EXPORT_SYMBOL_GPL(insn_to_mnemonic);
 
 static int print_insn(char *buffer, unsigned char *code, unsigned long addr)
 {
@@ -1900,14 +1828,14 @@ static int print_insn(char *buffer, unsigned char *code, unsigned long addr)
 	ptr = buffer;
 	insn = find_insn(code);
 	if (insn) {
-		if (insn->name[0] == '\0')
-			ptr += sprintf(ptr, "%s\t",
-				       long_insn_name[(int) insn->name[1]]);
+		if (insn->zero == 0)
+			ptr += sprintf(ptr, "%.7s\t",
+				       long_insn_name[insn->offset]);
 		else
 			ptr += sprintf(ptr, "%.5s\t", insn->name);
 		/* Extract the operands. */
 		separator = 0;
-		for (ops = formats[insn->format] + 1, i = 0;
+		for (ops = formats[insn->format], i = 0;
 		     *ops != 0 && i < 6; ops++, i++) {
 			operand = operands + *ops;
 			value = extract_operand(code, operand);

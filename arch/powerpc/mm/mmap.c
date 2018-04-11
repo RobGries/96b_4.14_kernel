@@ -113,6 +113,7 @@ radix__arch_get_unmapped_area(struct file *filp, unsigned long addr,
 	high_limit = DEFAULT_MAP_WINDOW;
 	if (addr >= high_limit || (fixed && (addr + len > high_limit)))
 		high_limit = TASK_SIZE;
+<<<<<<< HEAD
 
 	if (len > high_limit)
 		return -ENOMEM;
@@ -126,7 +127,17 @@ radix__arch_get_unmapped_area(struct file *filp, unsigned long addr,
 		mm->context.addr_limit = TASK_SIZE;
 
 	if (fixed)
+=======
+
+	if (len > high_limit)
+		return -ENOMEM;
+
+	if (fixed) {
+		if (addr > high_limit - len)
+			return -ENOMEM;
+>>>>>>> source/4.15+configfs_overlay
 		return addr;
+	}
 
 	if (addr) {
 		addr = PAGE_ALIGN(addr);
@@ -162,6 +173,7 @@ radix__arch_get_unmapped_area_topdown(struct file *filp,
 	high_limit = DEFAULT_MAP_WINDOW;
 	if (addr >= high_limit || (fixed && (addr + len > high_limit)))
 		high_limit = TASK_SIZE;
+<<<<<<< HEAD
 
 	if (len > high_limit)
 		return -ENOMEM;
@@ -175,7 +187,17 @@ radix__arch_get_unmapped_area_topdown(struct file *filp,
 		mm->context.addr_limit = TASK_SIZE;
 
 	if (fixed)
+=======
+
+	if (len > high_limit)
+		return -ENOMEM;
+
+	if (fixed) {
+		if (addr > high_limit - len)
+			return -ENOMEM;
+>>>>>>> source/4.15+configfs_overlay
 		return addr;
+	}
 
 	if (addr) {
 		addr = PAGE_ALIGN(addr);

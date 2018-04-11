@@ -36,6 +36,22 @@ enum x86_hypervisor_type {
 #include <asm/x86_init.h>
 #include <asm/xen/hypervisor.h>
 
+<<<<<<< HEAD
+=======
+/*
+ * x86 hypervisor information
+ */
+
+enum x86_hypervisor_type {
+	X86_HYPER_NATIVE = 0,
+	X86_HYPER_VMWARE,
+	X86_HYPER_MS_HYPERV,
+	X86_HYPER_XEN_PV,
+	X86_HYPER_XEN_HVM,
+	X86_HYPER_KVM,
+};
+
+>>>>>>> source/4.15+configfs_overlay
 struct hypervisor_x86 {
 	/* Hypervisor name */
 	const char	*name;
@@ -55,6 +71,7 @@ struct hypervisor_x86 {
 
 extern enum x86_hypervisor_type x86_hyper_type;
 extern void init_hypervisor_platform(void);
+<<<<<<< HEAD
 static inline bool hypervisor_is_type(enum x86_hypervisor_type type)
 {
 	return x86_hyper_type == type;
@@ -65,5 +82,9 @@ static inline bool hypervisor_is_type(enum x86_hypervisor_type type)
 {
 	return type == X86_HYPER_NATIVE;
 }
+=======
+#else
+static inline void init_hypervisor_platform(void) { }
+>>>>>>> source/4.15+configfs_overlay
 #endif /* CONFIG_HYPERVISOR_GUEST */
 #endif /* _ASM_X86_HYPERVISOR_H */

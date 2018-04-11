@@ -12,13 +12,18 @@
 #include <asm/guarded_storage.h>
 #include "entry.h"
 
-void exit_thread_gs(void)
+void guarded_storage_release(struct task_struct *tsk)
 {
+<<<<<<< HEAD
 	preempt_disable();
 	kfree(current->thread.gs_cb);
 	kfree(current->thread.gs_bc_cb);
 	current->thread.gs_cb = current->thread.gs_bc_cb = NULL;
 	preempt_enable();
+=======
+	kfree(tsk->thread.gs_cb);
+	kfree(tsk->thread.gs_bc_cb);
+>>>>>>> source/4.15+configfs_overlay
 }
 
 static int gs_enable(void)

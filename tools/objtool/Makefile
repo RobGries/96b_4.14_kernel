@@ -46,7 +46,11 @@ $(OBJTOOL_IN): fixdep FORCE
 	@$(MAKE) $(build)=objtool
 
 $(OBJTOOL): $(LIBSUBCMD) $(OBJTOOL_IN)
+<<<<<<< HEAD
 	@$(CONFIG_SHELL) ./sync-check.sh
+=======
+	@./sync-check.sh
+>>>>>>> source/4.15+configfs_overlay
 	$(QUIET_LINK)$(CC) $(OBJTOOL_IN) $(LDFLAGS) -o $@
 
 

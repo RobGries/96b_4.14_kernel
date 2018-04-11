@@ -581,7 +581,11 @@ int ib_security_modify_qp(struct ib_qp *qp,
 {
 	int ret = 0;
 	struct ib_ports_pkeys *tmp_pps;
+<<<<<<< HEAD
 	struct ib_ports_pkeys *new_pps = NULL;
+=======
+	struct ib_ports_pkeys *new_pps;
+>>>>>>> source/4.15+configfs_overlay
 	struct ib_qp *real_qp = qp->real_qp;
 	bool special_qp = (real_qp->qp_type == IB_QPT_SMI ||
 			   real_qp->qp_type == IB_QPT_GSI ||
@@ -589,19 +593,26 @@ int ib_security_modify_qp(struct ib_qp *qp,
 	bool pps_change = ((qp_attr_mask & (IB_QP_PKEY_INDEX | IB_QP_PORT)) ||
 			   (qp_attr_mask & IB_QP_ALT_PATH));
 
+<<<<<<< HEAD
 	WARN_ONCE((qp_attr_mask & IB_QP_PORT &&
 		   rdma_protocol_ib(real_qp->device, qp_attr->port_num) &&
 		   !real_qp->qp_sec),
 		   "%s: QP security is not initialized for IB QP: %d\n",
 		   __func__, real_qp->qp_num);
 
+=======
+>>>>>>> source/4.15+configfs_overlay
 	/* The port/pkey settings are maintained only for the real QP. Open
 	 * handles on the real QP will be in the shared_qp_list. When
 	 * enforcing security on the real QP all the shared QPs will be
 	 * checked as well.
 	 */
 
+<<<<<<< HEAD
 	if (pps_change && !special_qp && real_qp->qp_sec) {
+=======
+	if (pps_change && !special_qp) {
+>>>>>>> source/4.15+configfs_overlay
 		mutex_lock(&real_qp->qp_sec->mutex);
 		new_pps = get_new_pps(real_qp,
 				      qp_attr,
@@ -739,6 +750,7 @@ void ib_mad_agent_security_cleanup(struct ib_mad_agent *agent)
 
 int ib_mad_enforce_security(struct ib_mad_agent_private *map, u16 pkey_index)
 {
+<<<<<<< HEAD
 	if (!rdma_protocol_ib(map->agent.device, map->agent.port_num))
 		return 0;
 
@@ -747,6 +759,10 @@ int ib_mad_enforce_security(struct ib_mad_agent_private *map, u16 pkey_index)
 			return -EACCES;
 		return 0;
 	}
+=======
+	if (map->agent.qp->qp_type == IB_QPT_SMI && !map->agent.smp_allowed)
+		return -EACCES;
+>>>>>>> source/4.15+configfs_overlay
 
 	return ib_security_pkey_access(map->agent.device,
 				       map->agent.port_num,

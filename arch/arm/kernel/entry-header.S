@@ -300,7 +300,11 @@
 	mov	r2, sp
 	ldr	r1, [r2, #\offset + S_PSR]	@ get calling cpsr
 	ldr	lr, [r2, #\offset + S_PC]!	@ get pc
+<<<<<<< HEAD
 	tst	r1, #PSR_I_BIT | 0x0f
+=======
+	tst	r1, #0xcf
+>>>>>>> source/4.15+configfs_overlay
 	bne	1f
 	msr	spsr_cxsf, r1			@ save in spsr_svc
 #if defined(CONFIG_CPU_V6) || defined(CONFIG_CPU_32v6K)
@@ -332,7 +336,11 @@
 	ldr	r1, [sp, #\offset + S_PSR]	@ get calling cpsr
 	ldr	lr, [sp, #\offset + S_PC]	@ get pc
 	add	sp, sp, #\offset + S_SP
+<<<<<<< HEAD
 	tst	r1, #PSR_I_BIT | 0x0f
+=======
+	tst	r1, #0xcf
+>>>>>>> source/4.15+configfs_overlay
 	bne	1f
 	msr	spsr_cxsf, r1			@ save in spsr_svc
 

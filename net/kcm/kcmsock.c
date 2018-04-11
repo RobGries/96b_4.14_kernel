@@ -1640,6 +1640,21 @@ static struct file *kcm_clone(struct socket *osock)
 
 	__module_get(newsock->ops->owner);
 
+<<<<<<< HEAD
+=======
+	newfd = get_unused_fd_flags(0);
+	if (unlikely(newfd < 0)) {
+		err = newfd;
+		goto out_fd_fail;
+	}
+
+	newfile = sock_alloc_file(newsock, 0, osock->sk->sk_prot_creator->name);
+	if (IS_ERR(newfile)) {
+		err = PTR_ERR(newfile);
+		goto out_sock_alloc_fail;
+	}
+
+>>>>>>> source/4.15+configfs_overlay
 	newsk = sk_alloc(sock_net(osock->sk), PF_KCM, GFP_KERNEL,
 			 &kcm_proto, true);
 	if (!newsk) {

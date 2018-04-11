@@ -30,6 +30,7 @@ static inline void restore_access_regs(unsigned int *acrs)
 	asm volatile("lam 0,15,%0" : : "Q" (*(acrstype *)acrs));
 }
 
+<<<<<<< HEAD
 #define switch_to(prev, next, last) do {				\
 	/* save_fpu_regs() sets the CIF_FPU flag, which enforces	\
 	 * a restore of the floating point / vector registers as	\
@@ -44,6 +45,23 @@ static inline void restore_access_regs(unsigned int *acrs)
 	restore_ri_cb(next->thread.ri_cb, prev->thread.ri_cb);		\
 	restore_gs_cb(next->thread.gs_cb);				\
 	prev = __switch_to(prev, next);					\
+=======
+#define switch_to(prev,next,last) do {					\
+	if (prev->mm) {							\
+		save_fpu_regs();					\
+		save_access_regs(&prev->thread.acrs[0]);		\
+		save_ri_cb(prev->thread.ri_cb);				\
+		save_gs_cb(prev->thread.gs_cb);				\
+	}								\
+	update_cr_regs(next);						\
+	if (next->mm) {							\
+		set_cpu_flag(CIF_FPU);					\
+		restore_access_regs(&next->thread.acrs[0]);		\
+		restore_ri_cb(next->thread.ri_cb, prev->thread.ri_cb);	\
+		restore_gs_cb(next->thread.gs_cb);			\
+	}								\
+	prev = __switch_to(prev,next);					\
+>>>>>>> source/4.15+configfs_overlay
 } while (0)
 
 #endif /* __ASM_SWITCH_TO_H */

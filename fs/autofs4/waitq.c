@@ -170,6 +170,10 @@ static void autofs4_notify_daemon(struct autofs_sb_info *sbi,
 
 	mutex_unlock(&sbi->wq_mutex);
 
+<<<<<<< HEAD
+=======
+	if (autofs4_write(sbi, pipe, &pkt, pktsz))
+>>>>>>> source/4.15+configfs_overlay
 	switch (ret = autofs4_write(sbi, pipe, &pkt, pktsz)) {
 	case 0:
 		break;

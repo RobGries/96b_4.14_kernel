@@ -79,10 +79,17 @@ do {									\
 static inline void refresh_sysenter_cs(struct thread_struct *thread)
 {
 	/* Only happens when SEP is enabled, no need to test "SEP"arately: */
+<<<<<<< HEAD
 	if (unlikely(this_cpu_read(cpu_tss_rw.x86_tss.ss1) == thread->sysenter_cs))
 		return;
 
 	this_cpu_write(cpu_tss_rw.x86_tss.ss1, thread->sysenter_cs);
+=======
+	if (unlikely(this_cpu_read(cpu_tss.x86_tss.ss1) == thread->sysenter_cs))
+		return;
+
+	this_cpu_write(cpu_tss.x86_tss.ss1, thread->sysenter_cs);
+>>>>>>> source/4.15+configfs_overlay
 	wrmsr(MSR_IA32_SYSENTER_CS, thread->sysenter_cs, 0);
 }
 #endif
@@ -90,12 +97,19 @@ static inline void refresh_sysenter_cs(struct thread_struct *thread)
 /* This is used when switching tasks or entering/exiting vm86 mode. */
 static inline void update_sp0(struct task_struct *task)
 {
+<<<<<<< HEAD
 	/* On x86_64, sp0 always points to the entry trampoline stack, which is constant: */
 #ifdef CONFIG_X86_32
 	load_sp0(task->thread.sp0);
 #else
 	if (static_cpu_has(X86_FEATURE_XENPV))
 		load_sp0(task_top_of_stack(task));
+=======
+#ifdef CONFIG_X86_32
+	load_sp0(task->thread.sp0);
+#else
+	load_sp0(task_top_of_stack(task));
+>>>>>>> source/4.15+configfs_overlay
 #endif
 }
 

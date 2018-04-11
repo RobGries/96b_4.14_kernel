@@ -55,11 +55,15 @@ void unwind_start(struct unwind_state *state, struct task_struct *task,
 }
 
 #if defined(CONFIG_UNWINDER_ORC) || defined(CONFIG_UNWINDER_FRAME_POINTER)
+<<<<<<< HEAD
 /*
  * If 'partial' returns true, only the iret frame registers are valid.
  */
 static inline struct pt_regs *unwind_get_entry_regs(struct unwind_state *state,
 						    bool *partial)
+=======
+static inline struct pt_regs *unwind_get_entry_regs(struct unwind_state *state)
+>>>>>>> source/4.15+configfs_overlay
 {
 	if (unwind_done(state))
 		return NULL;

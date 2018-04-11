@@ -132,6 +132,7 @@ struct cpuinfo_x86 {
 	/* Index into per_cpu list: */
 	u16			cpu_index;
 	u32			microcode;
+	unsigned		initialized : 1;
 } __randomize_layout;
 
 struct cpuid_regs {
@@ -537,7 +538,11 @@ static inline void native_set_iopl_mask(unsigned mask)
 static inline void
 native_load_sp0(unsigned long sp0)
 {
+<<<<<<< HEAD
 	this_cpu_write(cpu_tss_rw.x86_tss.sp0, sp0);
+=======
+	this_cpu_write(cpu_tss.x86_tss.sp0, sp0);
+>>>>>>> source/4.15+configfs_overlay
 }
 
 static inline void native_swapgs(void)
@@ -555,6 +560,12 @@ static inline unsigned long current_top_of_stack(void)
 	 *  entry trampoline.
 	 */
 	return this_cpu_read_stable(cpu_current_top_of_stack);
+}
+
+static inline bool on_thread_stack(void)
+{
+	return (unsigned long)(current_top_of_stack() -
+			       current_stack_pointer) < THREAD_SIZE;
 }
 
 static inline bool on_thread_stack(void)

@@ -44,6 +44,7 @@ asmlinkage void ret_from_fork(void) asm ("ret_from_fork");
 
 extern void kernel_thread_starter(void);
 
+<<<<<<< HEAD
 /*
  * Free current thread data structures etc..
  */
@@ -53,17 +54,19 @@ void exit_thread(struct task_struct *tsk)
 		exit_thread_gs();
 }
 
+=======
+>>>>>>> source/4.15+configfs_overlay
 void flush_thread(void)
-{
-}
-
-void release_thread(struct task_struct *dead_task)
 {
 }
 
 void arch_release_task_struct(struct task_struct *tsk)
 {
 	runtime_instr_release(tsk);
+<<<<<<< HEAD
+=======
+	guarded_storage_release(tsk);
+>>>>>>> source/4.15+configfs_overlay
 }
 
 int arch_dup_task_struct(struct task_struct *dst, struct task_struct *src)

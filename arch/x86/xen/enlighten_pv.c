@@ -818,7 +818,11 @@ static void xen_load_sp0(unsigned long sp0)
 	mcs = xen_mc_entry(0);
 	MULTI_stack_switch(mcs.mc, __KERNEL_DS, sp0);
 	xen_mc_issue(PARAVIRT_LAZY_CPU);
+<<<<<<< HEAD
 	this_cpu_write(cpu_tss_rw.x86_tss.sp0, sp0);
+=======
+	this_cpu_write(cpu_tss.x86_tss.sp0, sp0);
+>>>>>>> source/4.15+configfs_overlay
 }
 
 void xen_set_iopl_mask(unsigned mask)
@@ -1230,6 +1234,7 @@ asmlinkage __visible void __init xen_start_kernel(void)
 	x86_platform.get_nmi_reason = xen_get_nmi_reason;
 
 	x86_init.resources.memory_setup = xen_memory_setup;
+	x86_init.irqs.intr_mode_init	= x86_init_noop;
 	x86_init.oem.arch_setup = xen_arch_setup;
 	x86_init.oem.banner = xen_banner;
 
