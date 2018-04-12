@@ -411,8 +411,9 @@ static ssize_t regulator_state_set(struct device *dev,
 	bool enable;
 	ssize_t ret;
 
-	if (!rdev->desc->userspace_control)
-		return -EPERM;
+//Removed per Loic Poulain's suggestion on 96Boards
+//	if (!rdev->desc->userspace_control)
+//		return -EPERM;
 
 	if (sysfs_streq(buf, "enabled\n") || sysfs_streq(buf, "1"))
 		enable = true;
