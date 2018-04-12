@@ -2297,9 +2297,10 @@ static int _regulator_disable(struct regulator_dev *rdev)
 
 	lockdep_assert_held_once(&rdev->mutex);
 
-	if (WARN(rdev->use_count <= 0,
-		 "unbalanced disables for %s\n", rdev_get_name(rdev)))
-		return -EIO;
+	//Disable this --- Asked about it 
+	//if (WARN(rdev->use_count <= 0,
+	//	 "unbalanced disables for %s\n", rdev_get_name(rdev)))
+	//	return -EIO;
 
 	/* are we the last user and permitted to disable ? */
 	if (rdev->use_count == 1 &&
