@@ -657,6 +657,14 @@ static int venc_set_properties(struct venus_inst *inst)
 	framerate = inst->timeperframe.denominator * FRAMERATE_FACTOR;
 	framerate = DIV_ROUND_UP(framerate, inst->timeperframe.numerator);
 
+	ret = venus_helper_set_work_mode(inst, VIDC_WORK_MODE_2);
+	if (ret)
+		return ret;
+
+	ret = venus_helper_set_core_usage(inst, VIDC_CORE_ID_2);
+	if (ret)
+		return ret;
+
 	ptype = HFI_PROPERTY_CONFIG_FRAME_RATE;
 	frate.buffer_type = HFI_BUFFER_OUTPUT;
 	frate.framerate = framerate;
