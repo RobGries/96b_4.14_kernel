@@ -189,6 +189,7 @@ struct ov5640_ctrls {
 	};
 	struct v4l2_ctrl *auto_focus;
 	struct v4l2_ctrl *brightness;
+	struct v4l2_ctrl *light_freq;
 	struct v4l2_ctrl *saturation;
 	struct v4l2_ctrl *contrast;
 	struct v4l2_ctrl *hue;
@@ -2163,6 +2164,21 @@ static int ov5640_set_ctrl_focus(struct ov5640_dev *sensor, int value)
 			      BIT(1), value ? BIT(1) : 0);
 }
 
+static int ov5640_set_ctl_light_freq(struct ov5640_dev *sensor, int value)
+{
+	int ret;
+
+	ret = ov5640_mod_reg(sensor, OV5640_REG_HZ5060_CTRL01, BIT(7),
+			     (value == V4L2_CID_POWER_LINE_FREQUENCY_AUTO) ?
+			     0: BIT(7));
+	if (ret)
+		return ret;
+
+	return ov5640_mod_reg(sensor, OV5640_REG_HZ5060_CTRL00, BIT(2),
+			      (value == V4L2_CID_POWER_LINE_FREQUENCY_50HZ) ?
+			      BIT(2): 0);
+}
+
 static int ov5640_g_volatile_ctrl(struct v4l2_ctrl *ctrl)
 {
 	struct v4l2_subdev *sd = ctrl_to_sd(ctrl);
@@ -2234,6 +2250,9 @@ static int ov5640_s_ctrl(struct v4l2_ctrl *ctrl)
 	case V4L2_CID_FOCUS_AUTO:
 		ret = ov5640_set_ctrl_focus(sensor, ctrl->val);
 		break;
+	case V4L2_CID_POWER_LINE_FREQUENCY:
+		ret = ov5640_set_ctl_light_freq(sensor, ctrl->val);
+		break;
 	default:
 		ret = -EINVAL;
 		break;
@@ -2298,6 +2317,11 @@ static int ov5640_init_controls(struct ov5640_dev *sensor)
 
 	ctrls->auto_focus = v4l2_ctrl_new_std(hdl, ops, V4L2_CID_FOCUS_AUTO,
 					      0, 1, 1, 0);
+	ctrls->light_freq =
+		v4l2_ctrl_new_std_menu(hdl, ops,
+				       V4L2_CID_POWER_LINE_FREQUENCY,
+				       V4L2_CID_POWER_LINE_FREQUENCY_AUTO, 0,
+				       V4L2_CID_POWER_LINE_FREQUENCY_50HZ);
 
 	if (hdl->error) {
 		ret = hdl->error;
