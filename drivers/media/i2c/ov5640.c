@@ -82,8 +82,9 @@
 #define OV5640_REG_POLARITY_CTRL00	0x4740
 #define OV5640_REG_MIPI_CTRL00		0x4800
 #define OV5640_REG_DEBUG_MODE		0x4814
-#define OV5640_REG_ISP_FORMAT_MUX_CTRL	0x501f
+#define OV5640_REG_ISP_CTRL03		0x5003
 #define OV5640_REG_PRE_ISP_TEST_SET1	0x503d
+#define OV5640_REG_ISP_FORMAT_MUX_CTRL	0x501f
 #define OV5640_REG_SDE_CTRL0		0x5580
 #define OV5640_REG_SDE_CTRL1		0x5581
 #define OV5640_REG_SDE_CTRL3		0x5583
@@ -186,6 +187,7 @@ struct ov5640_ctrls {
 		struct v4l2_ctrl *auto_gain;
 		struct v4l2_ctrl *gain;
 	};
+	struct v4l2_ctrl *auto_focus;
 	struct v4l2_ctrl *brightness;
 	struct v4l2_ctrl *saturation;
 	struct v4l2_ctrl *contrast;
@@ -2155,6 +2157,12 @@ static int ov5640_set_ctrl_test_pattern(struct ov5640_dev *sensor, int value)
 			      0xa4, value ? 0xa4 : 0);
 }
 
+static int ov5640_set_ctrl_focus(struct ov5640_dev *sensor, int value)
+{
+	return ov5640_mod_reg(sensor, OV5640_REG_ISP_CTRL03,
+			      BIT(1), value ? BIT(1) : 0);
+}
+
 static int ov5640_g_volatile_ctrl(struct v4l2_ctrl *ctrl)
 {
 	struct v4l2_subdev *sd = ctrl_to_sd(ctrl);
@@ -2223,6 +2231,9 @@ static int ov5640_s_ctrl(struct v4l2_ctrl *ctrl)
 	case V4L2_CID_TEST_PATTERN:
 		ret = ov5640_set_ctrl_test_pattern(sensor, ctrl->val);
 		break;
+	case V4L2_CID_FOCUS_AUTO:
+		ret = ov5640_set_ctrl_focus(sensor, ctrl->val);
+		break;
 	default:
 		ret = -EINVAL;
 		break;
@@ -2284,6 +2295,9 @@ static int ov5640_init_controls(struct ov5640_dev *sensor)
 		v4l2_ctrl_new_std_menu_items(hdl, ops, V4L2_CID_TEST_PATTERN,
 					     ARRAY_SIZE(test_pattern_menu) - 1,
 					     0, 0, test_pattern_menu);
+
+	ctrls->auto_focus = v4l2_ctrl_new_std(hdl, ops, V4L2_CID_FOCUS_AUTO,
+					      0, 1, 1, 0);
 
 	if (hdl->error) {
 		ret = hdl->error;
