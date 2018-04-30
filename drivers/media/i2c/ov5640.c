@@ -202,6 +202,7 @@ struct ov5640_ctrls {
 	struct v4l2_ctrl *contrast;
 	struct v4l2_ctrl *hue;
 	struct v4l2_ctrl *test_pattern;
+	struct v4l2_ctrl *pixel_clock;
 };
 
 struct ov5640_dev {
@@ -872,10 +873,16 @@ static int ov5640_set_dvp_pclk(struct ov5640_dev *sensor, unsigned long rate)
 static int ov5640_set_mipi_pclk(struct ov5640_dev *sensor, unsigned long rate)
 {
 	u8 sysdiv, prediv, mult, pll_rdiv, sclk_rdiv, pclk_rdiv;
+	unsigned long pclk;
 	int ret;
 
-	ov5640_calc_pclk(sensor, rate, &sysdiv, &prediv, &pll_rdiv, &mult,
-			 &sclk_rdiv, &pclk_rdiv);
+	pclk = ov5640_calc_pclk(sensor, rate, &sysdiv, &prediv, &pll_rdiv, &mult,
+				&sclk_rdiv, &pclk_rdiv);
+
+	ret = __v4l2_ctrl_s_ctrl_int64(sensor->ctrls.pixel_clock, pclk);
+	if (ret < 0)
+		 return ret;
+
 	ret = ov5640_write_reg(sensor, OV5640_REG_SC_PLL_CTRL1,
 			       (sysdiv << 4) | pclk_rdiv);
 	if (ret)
@@ -2373,6 +2380,9 @@ static int ov5640_init_controls(struct ov5640_dev *sensor)
 				       V4L2_CID_POWER_LINE_FREQUENCY,
 				       V4L2_CID_POWER_LINE_FREQUENCY_AUTO, 0,
 				       V4L2_CID_POWER_LINE_FREQUENCY_50HZ);
+
+	ctrls->pixel_clock = v4l2_ctrl_new_std(hdl, ops, V4L2_CID_PIXEL_RATE,
+					       1, INT_MAX, 1, 1);
 
 	if (hdl->error) {
 		ret = hdl->error;
