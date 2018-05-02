@@ -876,10 +876,10 @@ static int ov5640_set_mipi_pclk(struct ov5640_dev *sensor, unsigned long rate)
 	unsigned long pclk;
 	int ret;
 
-	pclk = ov5640_calc_pclk(sensor, rate, &sysdiv, &prediv, &pll_rdiv, &mult,
-				&sclk_rdiv, &pclk_rdiv);
+	pclk = ov5640_calc_pclk(sensor, rate * 4, &sysdiv, &prediv, &pll_rdiv,
+				&mult, &sclk_rdiv, &pclk_rdiv);
 
-	ret = __v4l2_ctrl_s_ctrl_int64(sensor->ctrls.pixel_clock, pclk);
+	ret = __v4l2_ctrl_s_ctrl_int64(sensor->ctrls.pixel_clock, rate);
 	if (ret < 0)
 		 return ret;
 
@@ -899,7 +899,7 @@ static int ov5640_set_mipi_pclk(struct ov5640_dev *sensor, unsigned long rate)
 		return ret;
 
 	return ov5640_mod_reg(sensor, OV5640_REG_SC_PLL_CTRL3,
-			      0xff, prediv | ((pll_rdiv - 1) << 4));
+			      0xff, prediv | ((pll_rdiv/* - 1*/) << 4));
 }
 
 /* download ov5640 settings to sensor through i2c */
@@ -2658,6 +2658,8 @@ static int ov5640_probe(struct i2c_client *client,
 		dev_err(dev, "failed to get xclk\n");
 		return PTR_ERR(sensor->xclk);
 	}
+
+	clk_set_rate(sensor->xclk, 23880000);
 
 	sensor->xclk_freq = clk_get_rate(sensor->xclk);
 	if (sensor->xclk_freq < OV5640_XCLK_MIN ||
