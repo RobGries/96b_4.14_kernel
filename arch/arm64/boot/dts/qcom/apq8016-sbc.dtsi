@@ -93,14 +93,14 @@
 			};
 
 			led@2 {
-				label = "miku-blue-led";
+				label = "miku-green-led";
 				gpios = <&msmgpio 22 GPIO_ACTIVE_HIGH>;
 				linux,default-trigger = "none";
 				default-state = "off";
 			};
 
 			led@3 {
-				label = "miku-green-led";
+				label = "miku-blue-led";
 				gpios = <&msmgpio 23 GPIO_ACTIVE_HIGH>;
 				linux,default-trigger = "none";
 				default-state = "off";
