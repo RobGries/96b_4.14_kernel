@@ -1797,20 +1797,6 @@ static int ov5640_set_power(struct ov5640_dev *sensor, bool on)
 		if (ret)
 			goto power_off;
 
-		if (sensor->ep.bus_type == V4L2_MBUS_CSI2) {
-			/*
-			 * start streaming briefly followed by stream off in
-			 * order to coax the clock lane into LP-11 state.
-			 */
-			ret = ov5640_set_stream_mipi(sensor, true);
-			if (ret)
-				goto power_off;
-			usleep_range(1000, 2000);
-			ret = ov5640_set_stream_mipi(sensor, false);
-			if (ret)
-				goto power_off;
-		}
-
 		return 0;
 	}
 
