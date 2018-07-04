@@ -1967,9 +1967,11 @@ static int ov5640_set_fmt(struct v4l2_subdev *sd,
 		goto out;
 	}
 
-	sensor->current_mode = new_mode;
-	sensor->fmt = *mbus_fmt;
-	sensor->pending_mode_change = true;
+	if (new_mode != sensor->current_mode) {
+		sensor->current_mode = new_mode;
+		sensor->fmt = *mbus_fmt;
+		sensor->pending_mode_change = true;
+	}
 out:
 	mutex_unlock(&sensor->lock);
 	return ret;
@@ -2512,8 +2514,10 @@ static int ov5640_s_frame_interval(struct v4l2_subdev *sd,
 		goto out;
 	}
 
-	sensor->current_mode = mode;
-	sensor->pending_mode_change = true;
+	if (mode != sensor->current_mode) {
+		sensor->current_mode = mode;
+		sensor->pending_mode_change = true;
+	}
 out:
 	mutex_unlock(&sensor->lock);
 	return ret;
