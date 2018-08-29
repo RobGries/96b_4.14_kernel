@@ -451,8 +451,8 @@
 	};
 
 	l11 {
-		regulator-min-microvolt = <1800000>;
-		regulator-max-microvolt = <3000000>;
+		regulator-min-microvolt = <1750000>;
+		regulator-max-microvolt = <3337000>;
 		regulator-initial-mode = <1>;
 	};
 
