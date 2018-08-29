@@ -198,9 +198,9 @@ static int venc_v4l2_to_hfi(int id, int value)
 	case V4L2_CID_MPEG_VIDEO_H264_ENTROPY_MODE:
 		switch (value) {
 		case V4L2_MPEG_VIDEO_H264_ENTROPY_MODE_CAVLC:
-		default:
 			return HFI_H264_ENTROPY_CAVLC;
 		case V4L2_MPEG_VIDEO_H264_ENTROPY_MODE_CABAC:
+		default:
 			return HFI_H264_ENTROPY_CABAC;
 		}
 	case V4L2_CID_MPEG_VIDEO_VPX_PROFILE:
@@ -717,8 +717,7 @@ static int venc_set_properties(struct venus_inst *inst)
 	 * n = 1 - all I-frames will be IDR frames
 	 * n > 1 - every n-th I-frame will be IDR frame
 	 */
-	ptype = HFI_PROPERTY_CONFIG_VENC_IDR_PERIOD;
-	idrp.idr_period = 0;
+	idrp.idr_period = 1; // was 0 now 1;
 	ret = hfi_session_set_property(inst, ptype, &idrp);
 	if (ret)
 		return ret;
