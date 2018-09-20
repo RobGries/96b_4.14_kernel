@@ -144,6 +144,7 @@ struct cci {
 	int nclocks;
 	u16 queue_size[NUM_QUEUES];
 	struct cci_master master[NUM_MASTERS];
+	const struct hw_params *hw;
 };
 
 static const struct cci_res res_v1_0_8 = {
@@ -427,7 +428,8 @@ static int cci_run_queue(struct cci *cci, u8 master, u8 queue)
 			master, queue);
 
 		cci_halt(cci);
-
+		cci_reset(cci);
+		cci_init(cci, cci->hw);
 		return -ETIMEDOUT;
 	}
 
@@ -608,13 +610,12 @@ static int cci_probe(struct platform_device *pdev)
 {
 	struct device *dev = &pdev->dev;
 	const struct cci_res *res;
-	const struct hw_params *hw;
 	struct cci *cci;
 	struct resource *r;
 	int ret = 0;
-	u8 mode;
 	u32 val;
 	int i;
+	const struct hw_params *hw;
 
 	cci = devm_kzalloc(dev, sizeof(*cci), GFP_KERNEL);
 	if (!cci)
@@ -647,13 +648,13 @@ static int cci_probe(struct platform_device *pdev)
 	strlcpy(cci->adap.name, "Qualcomm Camera Control Interface",
 		sizeof(cci->adap.name));
 
-	mode = I2C_MODE_STANDARD;
+	cci->hw = &hw[I2C_MODE_STANDARD];
 	ret = of_property_read_u32(pdev->dev.of_node, "clock-frequency", &val);
 	if (!ret) {
 		if (val == 400000)
-			mode = I2C_MODE_FAST;
+			cci->hw = &hw[I2C_MODE_FAST];
 		else if (val == 1000000)
-			mode = I2C_MODE_FAST_PLUS;
+			cci->hw = &hw[I2C_MODE_FAST_PLUS];
 	}
 
 	/* Memory */
@@ -730,7 +731,7 @@ static int cci_probe(struct platform_device *pdev)
 	if (ret < 0)
 		goto error;
 
-	ret = cci_init(cci, &hw[mode]);
+	ret = cci_init(cci, cci->hw);
 	if (ret < 0)
 		goto error;
 
