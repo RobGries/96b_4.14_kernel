@@ -1100,8 +1100,8 @@ static void venc_inst_init(struct venus_inst *inst)
 	if (inst->core->res->hfi_version == HFI_VERSION_3XX)
 		inst->cap_height.max = ALIGN(2160, 32);
 	inst->cap_height.step_size = 2;
-	inst->cap_framerate.min = 1;
-	inst->cap_framerate.max = 30;
+	inst->cap_framerate.min = 15;
+	inst->cap_framerate.max = 15;
 	inst->cap_framerate.step_size = 1;
 	inst->cap_mbs_per_frame.min = 24;
 	inst->cap_mbs_per_frame.max = 8160;
