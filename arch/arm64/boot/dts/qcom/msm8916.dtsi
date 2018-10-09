@@ -512,6 +512,7 @@
 				 <&gcc GCC_SDCC2_AHB_CLK>,
 				 <&xo_board>;
 			clock-names = "core", "iface", "xo";
+			max-frequency = <100000000>;
 			bus-width = <4>;
 			status = "disabled";
 		};
