@@ -1118,7 +1118,8 @@ static const struct freq_tbl ftbl_gcc_sdcc2_apps_clk[] = {
 	F(25000000, P_GPLL0, 16, 1, 2),
 	F(50000000, P_GPLL0, 16, 0, 0),
 	F(100000000, P_GPLL0, 8, 0, 0),
-	F(200000000, P_GPLL0, 4, 0, 0),
+	//Disable 200MHz Clock -RG
+	//F(200000000, P_GPLL0, 4, 0, 0),
 	{ }
 };
 
