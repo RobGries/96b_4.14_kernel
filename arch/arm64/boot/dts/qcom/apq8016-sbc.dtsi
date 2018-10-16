@@ -455,8 +455,8 @@
 		regulator-max-microvolt = <3000000>;
 		regulator-initial-mode = <1>;
 
-		/*regulator-allow-set-load;
-		regulator-system-load = <250000>; */
+		regulator-allow-set-load;
+		regulator-system-load = <250000>;
 	};
 
 	l12 {
