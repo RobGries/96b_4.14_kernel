@@ -217,9 +217,9 @@ static int venc_v4l2_to_hfi(int id, int value)
 	case V4L2_CID_MPEG_VIDEO_H264_ENTROPY_MODE:
 		switch (value) {
 		case V4L2_MPEG_VIDEO_H264_ENTROPY_MODE_CAVLC:
-		default:
 			return HFI_H264_ENTROPY_CAVLC;
 		case V4L2_MPEG_VIDEO_H264_ENTROPY_MODE_CABAC:
+		default:
 			return HFI_H264_ENTROPY_CABAC;
 		}
 	case V4L2_CID_MPEG_VIDEO_VPX_PROFILE:

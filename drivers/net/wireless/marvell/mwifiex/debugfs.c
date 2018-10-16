@@ -168,10 +168,15 @@ mwifiex_device_dump_read(struct file *file, char __user *ubuf,
 {
 	struct mwifiex_private *priv = file->private_data;
 
-	if (!priv->adapter->if_ops.device_dump)
-		return -EIO;
-
-	priv->adapter->if_ops.device_dump(priv->adapter);
+	/* For command timeouts, USB firmware will automatically emit
+	 * firmware dump events, so we don't implement device_dump().
+	 * For user-initiated dumps, we trigger it ourselves.
+	 */
+	if (priv->adapter->iface_type == MWIFIEX_USB)
+		mwifiex_send_cmd(priv, HostCmd_CMD_FW_DUMP_EVENT,
+				 HostCmd_ACT_GEN_SET, 0, NULL, true);
+	else
+		priv->adapter->if_ops.device_dump(priv->adapter);
 
 	return 0;
 }
@@ -836,7 +841,7 @@ mwifiex_hscfg_write(struct file *file, const char __user *ubuf,
 			      MWIFIEX_SYNC_CMD, &hscfg);
 
 	mwifiex_enable_hs(priv->adapter);
-	priv->adapter->hs_enabling = false;
+	clear_bit(MWIFIEX_IS_HS_ENABLING, &priv->adapter->work_flags);
 	ret = count;
 done:
 	kfree(buf);

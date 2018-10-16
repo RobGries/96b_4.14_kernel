@@ -1117,6 +1117,8 @@ static const struct sdhci_pltfm_data sdhci_msm_pdata = {
 	.quirks2 = SDHCI_QUIRK2_PRESET_VALUE_BROKEN,
 	.ops = &sdhci_msm_ops,
 };
+// |
+//			   SDHCI_QUIRK2_BROKEN_HS200,
 
 static int sdhci_msm_probe(struct platform_device *pdev)
 {
