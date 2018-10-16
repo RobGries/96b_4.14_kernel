@@ -559,17 +559,21 @@ static int cci_xfer(struct i2c_adapter *adap, struct i2c_msg msgs[], int num)
 	struct cci *cci = i2c_get_adapdata(adap);
 	int i;
 	int ret = 0;
+	int read0write1 = -1;
 
 	for (i = 0; i < num; i++) {
-		if (msgs[i].flags & I2C_M_RD)
+		if (msgs[i].flags & I2C_M_RD) {
 			ret = cci_i2c_read(cci, msgs[i].addr, msgs[i].buf,
 					   msgs[i].len);
-		else
+		    read0write1=0;
+		}
+		else {
 			ret = cci_i2c_write(cci, msgs[i].addr, msgs[i].buf,
 					    msgs[i].len);
-
+			read0write1=1;
+		}
 		if (ret < 0) {
-			dev_err(cci->dev, "cci i2c xfer error %d", ret);
+			dev_err(cci->dev, "cci i2c xfer error %d rdwr=%d", ret, read0write1);
 			break;
 		}
 	}
@@ -579,6 +583,7 @@ static int cci_xfer(struct i2c_adapter *adap, struct i2c_msg msgs[], int num)
 
 	return ret;
 }
+
 
 static u32 cci_func(struct i2c_adapter *adap)
 {
