@@ -573,7 +573,7 @@ static int cci_xfer(struct i2c_adapter *adap, struct i2c_msg msgs[], int num)
 			read0write1=1;
 		}
 		if (ret < 0) {
-			dev_err(cci->dev, "cci i2c xfer error %d rdwr=%d i=%d addr=%d buf=%d len=%d", ret, read0write1, i, msgs[i].addr,msgs[i]->buf, msgs[i].len);
+			dev_err(cci->dev, "cci i2c xfer error %d rdwr=%d i=%d addr=%d buf=%d len=%d", ret, read0write1, i, msgs[i].addr,msgs[i].buf, msgs[i].len);
 			break;
 		}
 	}
