@@ -233,6 +233,7 @@
 			regulator-name = "camera_vdddo";
 			regulator-min-microvolt = <1800000>;
 			regulator-max-microvolt = <1800000>;
+			vin-supply = <&pm8916_l5>;
 			regulator-always-on;
 		};
 
@@ -241,14 +242,7 @@
 			regulator-name = "camera_vdda";
 			regulator-min-microvolt = <2800000>;
 			regulator-max-microvolt = <2800000>;
-			regulator-always-on;
-		};
-
-		camera_vddd_1v5: fixedregulator@2 {
-			compatible = "regulator-fixed";
-			regulator-name = "camera_vddd";
-			regulator-min-microvolt = <1500000>;
-			regulator-max-microvolt = <1500000>;
+			vin-supply = <&pm8916_l10>;
 			regulator-always-on;
 		};
 
@@ -258,8 +252,7 @@
 			camera_rear@78 {
 				compatible = "ovti,ov5640";
 				reg = <0x78>;
-
-				enable-gpios = <&msmgpio 34 GPIO_ACTIVE_HIGH>;
+				powerdown-gpios = <&msmgpio 34 GPIO_ACTIVE_HIGH>;
 				reset-gpios = <&msmgpio 35 GPIO_ACTIVE_LOW>;
 				pinctrl-names = "default";
 				pinctrl-0 = <&camera_rear_default>;
@@ -268,44 +261,14 @@
 				clock-names = "xclk";
 				clock-frequency = <23880000>;
 
-				vdddo-supply = <&pm8916_l6>;
-				vdda-supply = <&pm8916_l10>;
-				vddd-supply = <&camera_vddd_1v5>;
-
+				vdddo-supply = <&camera_vdddo_1v8>;
+				vdda-supply = <&camera_vdda_2v8>;
 
 				port {
 					ov5640_ep: endpoint {
 						clock-lanes = <1>;
 						data-lanes = <0 2>;
 						remote-endpoint = <&csiphy0_ep>;
-					};
-				};
-			};
-
-			camera_front@3a {
-				compatible = "ovti,ov5645";
-				reg = <0x3a>;
-
-				enable-gpios = <&msmgpio 33 GPIO_ACTIVE_HIGH>;
-				reset-gpios = <&msmgpio 28 GPIO_ACTIVE_LOW>;
-				pinctrl-names = "default";
-				pinctrl-0 = <&camera_front_default>;
-
-				clocks = <&gcc GCC_CAMSS_MCLK1_CLK>;
-				clock-names = "xclk";
-				clock-frequency = <23880000>;
-
-				vdddo-supply = <&camera_vdddo_1v8>;
-				vdda-supply = <&camera_vdda_2v8>;
-				vddd-supply = <&camera_vddd_1v5>;
-
-				status = "disabled";
-
-				port {
-					ov5645_2_ep: endpoint {
-						clock-lanes = <1>;
-						data-lanes = <0 2>;
-						remote-endpoint = <&csiphy1_ep>;
 					};
 				};
 			};
@@ -322,15 +285,6 @@
 						clock-lanes = <1>;
 						data-lanes = <0 2>;
 						remote-endpoint = <&ov5640_ep>;
-					};
-				};
-				port@1 {
-					reg = <1>;
-					csiphy1_ep: endpoint {
-						clock-lanes = <1>;
-						data-lanes = <0 2>;
-						remote-endpoint = <&ov5645_2_ep>;
-						status = "disabled";
 					};
 				};
 			};
