@@ -532,6 +532,7 @@
 			pins = "gpio34";
 			drive-strength = <16>;
 			bias-disable;
+			output-high;
 		};
 
 		 pinmux_rst {
