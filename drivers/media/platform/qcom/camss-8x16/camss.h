@@ -31,8 +31,10 @@
 #include "camss-ispif.h"
 #include "camss-vfe.h"
 
-#define CAMSS_CSID_NUM 2
-#define CAMSS_CSIPHY_NUM 2
+//was 2
+#define CAMSS_CSID_NUM 1
+//was 2
+#define CAMSS_CSIPHY_NUM 1
 
 #define to_camss(ptr_module)	\
 	container_of(ptr_module, struct camss, ptr_module)
