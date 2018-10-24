@@ -510,7 +510,8 @@ use_default_name:
 	rdev->wiphy.rts_threshold = (u32) -1;
 	rdev->wiphy.coverage_class = 0;
 
-	rdev->wiphy.max_num_csa_counters = 1;
+	//Allows CSA via hostapd
+	rdev->wiphy.max_num_csa_counters = 0;
 
 	rdev->wiphy.max_sched_scan_plans = 1;
 	rdev->wiphy.max_sched_scan_plan_interval = U32_MAX;
