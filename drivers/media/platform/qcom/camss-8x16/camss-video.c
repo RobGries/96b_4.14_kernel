@@ -821,7 +821,12 @@ int msm_video_register(struct camss_video *video, struct v4l2_device *v4l2_dev,
 	vdev->vfl_dir = VFL_DIR_RX;
 	vdev->queue = &video->vb2_q;
 	vdev->lock = &video->lock;
-	strlcpy(vdev->name, name, sizeof(vdev->name));
+
+	if(is_pix == 1) {
+		strlcpy(vdev->name, "qcom-vfe-pix" , sizeof(vdev->name));
+	} else {
+		strlcpy(vdev->name, name, sizeof(vdev->name));
+	}
 
 	ret = video_register_device(vdev, VFL_TYPE_GRABBER, -1);
 	if (ret < 0) {
