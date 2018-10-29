@@ -2427,7 +2427,7 @@ static int ov5640_init_controls(struct ov5640_dev *sensor)
 		v4l2_ctrl_new_std_menu(hdl, ops,
 				       V4L2_CID_POWER_LINE_FREQUENCY,
 				       V4L2_CID_POWER_LINE_FREQUENCY_AUTO, 0,
-				       V4L2_CID_POWER_LINE_FREQUENCY_50HZ);
+				       V4L2_CID_POWER_LINE_FREQUENCY_60HZ);
 
 	if (hdl->error) {
 		ret = hdl->error;
