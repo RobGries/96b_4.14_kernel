@@ -1891,7 +1891,7 @@ static int ov5640_restore_mode(struct ov5640_dev *sensor)
 {
 	int ret;
 	u8 init_regs = ov5640_init_params;
-	struct active_regs;
+	const struct ov5640_mode_info *active_regs;
 
 	switch (init_regs) {
 		case 0 :
@@ -1927,7 +1927,7 @@ static int ov5640_restore_mode(struct ov5640_dev *sensor)
 		return ret;
 
 	/* now restore the last capture mode */
-	return ov5640_set_mode(sensor, &init_regs);
+	return ov5640_set_mode(sensor, &active_regs);
 }
 
 static void ov5640_power(struct ov5640_dev *sensor, bool enable)
