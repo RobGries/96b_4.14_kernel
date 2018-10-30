@@ -2116,7 +2116,7 @@ static int ov5640_restore_mode(struct ov5640_dev *sensor)
 			break;
 		case 6 :
 			printk(KERN_INFO "[*] ov5640: Using ov5640__new.txt reg map");
-			active_regs = &ov5640_mode_info ov5640_mode_new_visual_setting_init_data;
+			active_regs = &ov5640_mode_new_visual_setting_init_data;
 			break;
 		default :
 			printk(KERN_INFO "[*] ov5640: Using Stock init reg map");
