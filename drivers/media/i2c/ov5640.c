@@ -1922,12 +1922,12 @@ static int ov5640_restore_mode(struct ov5640_dev *sensor)
 
 
 	/* first load the initial register values */
-	ret = ov5640_load_regs(sensor, &active_regs);
+	ret = ov5640_load_regs(sensor, active_regs);
 	if (ret < 0)
 		return ret;
 
 	/* now restore the last capture mode */
-	return ov5640_set_mode(sensor, &active_regs);
+	return ov5640_set_mode(sensor, active_regs);
 }
 
 static void ov5640_power(struct ov5640_dev *sensor, bool enable)
