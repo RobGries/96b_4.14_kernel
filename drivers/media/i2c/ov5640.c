@@ -1891,38 +1891,38 @@ static int ov5640_restore_mode(struct ov5640_dev *sensor)
 {
 	int ret;
 	u8 init_regs = ov5640_init_params;
-	struct init_regs;
+	struct active_regs;
 
 	switch (init_regs) {
 		case 0 :
 			printk(KERN_INFO "[*] OV5640: Using Stock init reg map");
-			init_regs = &ov5640_mode_stock_init_data;
+			active_regs = &ov5640_mode_stock_init_data;
 			break;
 		case 1 :
 			printk(KERN_INFO "[*] OV5640: Using lenc 1.txt reg map");
-			init_regs = &ov5640_mode_lenc1_init_data;
+			active_regs = &ov5640_mode_lenc1_init_data;
 			break;
 		case 2 :
 			printk(KERN_INFO "[*] OV5640: Using lenc 2.txt reg map");
-			init_regs = &ov5640_mode_lenc2_init_data;
+			active_regs = &ov5640_mode_lenc2_init_data;
 			break;
 		case 3 : 
 			printk(KERN_INFO "[*] OV5640: Using lenc 3.txt reg map");
-			init_regs = &ov5640_mode_lenc3_init_data;
+			active_regs = &ov5640_mode_lenc3_init_data;
 			break;
 		case 4 :
 			printk(KERN_INFO "[*] OV5640: Using lenc 4.txt reg map");
-			init_regs = &ov5640_mode_lenc4_init_data;
+			active_regs = &ov5640_mode_lenc4_init_data;
 			break;
 		default :
 			printk(KERN_INFO "[*] OV5640: Using Stock init reg map");
-			init_regs = &ov5640_mode_stock_init_data;
+			active_regs = &ov5640_mode_stock_init_data;
 			break;
 	}
 
 
 	/* first load the initial register values */
-	ret = ov5640_load_regs(sensor, &init_regs);
+	ret = ov5640_load_regs(sensor, &active_regs);
 	if (ret < 0)
 		return ret;
 
