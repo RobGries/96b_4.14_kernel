@@ -252,6 +252,7 @@
 			camera_rear@78 {
 				compatible = "ovti,ov5640";
 				reg = <0x78>;
+				
 				powerdown-gpios = <&msmgpio 34 GPIO_ACTIVE_HIGH>;
 				reset-gpios = <&msmgpio 35 GPIO_ACTIVE_LOW>;
 				pinctrl-names = "default";
@@ -409,8 +410,8 @@
 		regulator-max-microvolt = <3000000>;
 		regulator-initial-mode = <1>;
 
-		/*regulator-allow-set-load;
-		regulator-system-load = <250000>; */
+		regulator-allow-set-load;
+		regulator-system-load = <250000>;
 	};
 
 	l12 {
