@@ -2723,10 +2723,9 @@ struct cfg80211_pmk_conf {
  *	BSS, i.e., this impacts only subsequent (re)associations. The bits in
  *	changed are defined in &enum cfg80211_connect_params_changed.
  *	(invoked with the wireless_dev mutex held)
- * @disconnect: Disconnect from the BSS/ESS or stop connection attempts if
- *      connection is in progress. Once done, call cfg80211_disconnected() in
- *      case connection was already established (invoked with the
- *      wireless_dev mutex held), otherwise call cfg80211_connect_timeout().
+ * @disconnect: Disconnect from the BSS/ESS. Once done, call
+ *	cfg80211_disconnected().
+ *	(invoked with the wireless_dev mutex held)
  *
  * @join_ibss: Join the specified IBSS (or create if necessary). Once done, call
  *	cfg80211_ibss_joined(), also call that function when changing BSSID due
