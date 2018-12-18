@@ -250,12 +250,10 @@ void v4l2_spi_subdev_init(struct v4l2_subdev *sd, struct spi_device *spi,
 
 /* ------------------------------------------------------------------------- */
 
-<<<<<<< 993fdc494d4639a6c0718320d90d25be288537dd
 /* Note: these remaining ioctls/structs should be removed as well, but they are
    still used in tuner-simple.c (TUNER_SET_CONFIG), cx18/ivtv (RESET) and
    v4l2-int-device.h (v4l2_routing). To remove these ioctls some more cleanup
    is needed in those modules. */
-=======
 /*
  * FIXME: these remaining ioctls/structs should be removed as well, but they
  * are still used in tuner-simple.c (TUNER_SET_CONFIG) and cx18/ivtv (RESET).
@@ -263,8 +261,6 @@ void v4l2_spi_subdev_init(struct v4l2_subdev *sd, struct spi_device *spi,
  *
  * It doesn't make much sense on documenting them, as what we really want is
  * to get rid of them.
- */
->>>>>>> media: v4l2-common.h: document helper functions
 
 /* s_config */
 struct v4l2_priv_tun_config {
