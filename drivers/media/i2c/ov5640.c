@@ -114,7 +114,8 @@ MODULE_PARM_DESC(virtual_channel,
 		 "MIPI CSI-2 virtual channel (0..3), default 0");
 
 MODULE_PARM_DESC(ov5640_init_params,
-		 "Select ov5640 register parameters - (0) Stock no lenc changes, (1) 1.txt parameters (2) 2.txt parameters, (3) 3.txt parameters, (4) 4.txt parameters");
+		 "Select ov5640 register parameters - (0) Stock no lenc changes, (1) 1.txt parameters
+		 (2) 2.txt parameters, (3) 3.txt parameters");
 
 static const int ov5640_framerates[] = {
 	[OV5640_15_FPS] = 15,
