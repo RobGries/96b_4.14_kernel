@@ -1182,10 +1182,6 @@ static const struct ov5640_mode_info ov5640_mode_lenc4_init_data = {
 	ARRAY_SIZE(ov5640_init_lenc4_setting_30fps_VGA),
 };
 
-static const struct ov5640_mode_info ov5640_mode_cwf_LENC_init_data = {
-	0, SUBSAMPLING, 640, 480, ov5640_init_cwf_LENC_setting_30fps_VGA,
-	ARRAY_SIZE(ov5640_init_cwf_LENC_setting_30fps_VGA),
-};
 
 static const struct ov5640_mode_info
 ov5640_mode_data[OV5640_NUM_FRAMERATES][OV5640_NUM_MODES] = {
@@ -2015,7 +2011,7 @@ static int ov5640_restore_mode(struct ov5640_dev *sensor)
 			break;
 		case 5 :
 			printk(KERN_INFO "[*] ov5640: Using OV5640 cwf_LENC_setting.txt reg map");
-			active_regs = &ov5640_mode_cwf_LENC_init_data;
+			active_regs = &ov5640_init_cwf_LENC_setting_30fps_VGA;
 			break;
 		default :
 			printk(KERN_INFO "[*] ov5640: Using Stock init reg map");
