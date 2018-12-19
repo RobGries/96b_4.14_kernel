@@ -1792,13 +1792,8 @@ static int ov5640_set_mode(struct ov5640_dev *sensor)
 	 */
 	rate = mode->vtot * mode->htot * 16;
 	rate *= ov5640_framerates[sensor->current_fr];
-	if (sensor->ep.bus_type == V4L2_MBUS_CSI2_DPHY) {
-		rate = rate / sensor->ep.bus.mipi_csi2.num_data_lanes;
-		ret = ov5640_set_mipi_pclk(sensor, rate);
-	} else {
-		rate = rate / sensor->ep.bus.parallel.bus_width;
-		ret = ov5640_set_dvp_pclk(sensor, rate);
-	}
+	rate = rate / sensor->ep.bus.mipi_csi2.num_data_lanes;
+	ret = ov5640_set_mipi_pclk(sensor, rate);
 
 	if (ret < 0)
 		return 0;
