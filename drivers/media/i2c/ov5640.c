@@ -83,6 +83,7 @@
 #define OV5640_REG_SIGMADELTA_CTRL0C	0x3c0c
 #define OV5640_REG_FRAME_CTRL01		0x4202
 #define OV5640_REG_FORMAT_CONTROL00	0x4300
+
 #define OV5640_REG_POLARITY_CTRL00	0x4740
 #define OV5640_REG_MIPI_CTRL00		0x4800
 #define OV5640_REG_DEBUG_MODE		0x4814
@@ -94,6 +95,13 @@
 #define OV5640_REG_SDE_CTRL4		0x5584
 #define OV5640_REG_SDE_CTRL5		0x5585
 #define OV5640_REG_AVG_READOUT		0x56a1
+
+/*Defines UV planar control */
+#define OV5640_REG_FORMAT_CONTROL01	0x4301
+#define OV5640_REG_VAL_UV_AVG = 0x00
+#define OV5640_REG_VAL_UV_FIRST_PIXEL = 0x01
+#define OV5640_REG_VAL_UV_SECOND_PIXEL = 0x03
+
 
 enum ov5640_mode_id {
 	OV5640_MODE_QCIF_176_144 = 0,
@@ -2253,6 +2261,13 @@ static int ov5640_set_framefmt(struct ov5640_dev *sensor,
 		break;
 	default:
 		return -EINVAL;
+	}
+
+    /*Sets avg for first plane of image while in yuv422 mode, we always operate in yuv422 mode due to encoder*/
+	if (mux == OV5640_FMT_MUX_YUV422) {
+		ret = ov5640_write_reg(sensor, OV5640_REG_FORMAT_CONTROL01, OV5640_REG_VAL_UV_AVG);
+		if (ret)
+			return ret;
 	}
 
 	/* FORMAT CONTROL00: YUV and RGB formatting */
