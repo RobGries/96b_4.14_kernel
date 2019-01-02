@@ -2680,7 +2680,7 @@ static int ov5640_init_controls(struct ov5640_dev *sensor)
 
 	/* Pixel Clock (default of 96MHz) */
 	ctrls->pixel_clock = v4l2_ctrl_new_std(hdl, ops, V4L2_CID_PIXEL_RATE,
-					1, INT_MAX, 1, 96000000);
+					1, INT_MAX, 1, 168000000); //was 96000000
 	ctrls->saturation = v4l2_ctrl_new_std(hdl, ops, V4L2_CID_SATURATION,
 					      0, 255, 1, 64);
 	ctrls->hue = v4l2_ctrl_new_std(hdl, ops, V4L2_CID_HUE,
