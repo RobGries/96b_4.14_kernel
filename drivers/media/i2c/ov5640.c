@@ -259,6 +259,9 @@ struct ov5640_dev {
 	bool streaming;
 };
 
+static int ov5640_set_sharpness(struct ov5640_dev *sensor, u8 value);
+static int ov5640_set_denoise(struct ov5640_dev *sensor, u8 value);
+
 static inline struct ov5640_dev *to_ov5640_dev(struct v4l2_subdev *sd)
 {
 	return container_of(sd, struct ov5640_dev, sd);
@@ -1881,7 +1884,6 @@ static int ov5640_set_sharpness(struct ov5640_dev *sensor, u8 value)
 
 	return ov5640_write_reg(sensor, 0x5302, value);
 }
-
 
 static int ov5640_set_denoise(struct ov5640_dev *sensor, u8 value) 
 {
