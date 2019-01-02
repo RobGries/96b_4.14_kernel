@@ -1839,6 +1839,14 @@ static int ov5640_set_mode(struct ov5640_dev *sensor)
 	if (ret < 0)
 		return ret;
 
+	ret = ov5640_set_sharpness(sensor, 0x08);
+	if (ret < 0)
+		return ret;
+
+	ret = ov5640_set_denoise(sensor, 0x04);
+	if (ret < 0)
+		return ret;
+
 	sensor->pending_mode_change = false;
 	sensor->last_mode = mode;
 
@@ -1853,6 +1861,48 @@ restore_auto_gain:
 
 	return ret;
 }
+
+static int ov5640_set_sharpness(struct ov5640_dev *sensor, u8 value) 
+{
+	int ret;
+	u8 readval;
+
+	ret = ov5640_read_reg(sensor, 0x5308, &readval);
+	if (ret) {
+		printk(KERN_INFO "[*] ov5640: Error reading 0x5308 sharpness val"); 
+		return ret;
+	}
+
+	ret = ov5640_write_reg(sensor, 0x5308, readval|0x40);
+	if (ret) {
+		printk(KERN_INFO "[*] ov5640: Error writing 0x5308 sharpness val"); 
+		return ret;
+	}
+
+	return ov5640_write_reg(sensor, 0x5302, value);
+}
+
+
+static int ov5640_set_denoise(struct ov5640_dev *sensor, u8 value) 
+{
+	int ret;
+	u8 readval;
+
+	ret = ov5640_read_reg(sensor, 0x5308, &readval);
+	if (ret) {
+		printk(KERN_INFO "[*] ov5640: Error reading 0x5308 denoise val"); 
+		return ret;
+	}
+
+	ret = ov5640_write_reg(sensor, 0x5308, readval|0x10);
+	if (ret) {
+		printk(KERN_INFO "[*] ov5640: Error writing 0x5308 denoise val"); 
+		return ret;
+	}
+
+	return ov5640_write_reg(sensor, 0x5306, value);
+}
+
 
 static int ov5640_set_framefmt(struct ov5640_dev *sensor,
 			       struct v4l2_mbus_framefmt *format);
