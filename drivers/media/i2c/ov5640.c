@@ -1880,6 +1880,8 @@ static int ov5640_set_sharpness(struct ov5640_dev *sensor, u8 value)
 	if (ret) {
 		printk(KERN_INFO "[*] ov5640: Error writing 0x5308 sharpness val"); 
 		return ret;
+	} else {
+		printk(KERN_INFO "[*] ov5640: writing 0x5308 sharpness val"); 
 	}
 
 	return ov5640_write_reg(sensor, 0x5302, value);
@@ -1900,6 +1902,8 @@ static int ov5640_set_denoise(struct ov5640_dev *sensor, u8 value)
 	if (ret) {
 		printk(KERN_INFO "[*] ov5640: Error writing 0x5308 denoise val"); 
 		return ret;
+	} else {
+		printk(KERN_INFO "[*] ov5640: writing 0x5308 denoise val"); 
 	}
 
 	return ov5640_write_reg(sensor, 0x5306, value);
