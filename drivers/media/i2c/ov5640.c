@@ -1843,12 +1843,20 @@ static int ov5640_set_mode(struct ov5640_dev *sensor)
 		return ret;
 
 	ret = ov5640_set_sharpness(sensor, 0x08);
-	if (ret < 0)
+	if (ret < 0) {
+		printk(KERN_INFO "[*] ov5640: Error writing 0x5302 sharpness val");
 		return ret;
+	} else {
+		printk(KERN_INFO "[*] ov5640: Write to 0x5302 sharpness val");
+	}
 
 	ret = ov5640_set_denoise(sensor, 0x04);
-	if (ret < 0)
+	if (ret < 0) {
+		printk(KERN_INFO "[*] ov5640: Error writing 0x5306 denoise val"); 
 		return ret;
+	} else {
+		printk(KERN_INFO "[*] ov5640: Write to 0x5306 denoise val"); 
+	}
 
 	sensor->pending_mode_change = false;
 	sensor->last_mode = mode;
