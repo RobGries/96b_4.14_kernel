@@ -331,7 +331,7 @@ static const struct reg_value ov5640_init_setting_30fps_VGA[] = {
 	{0x538a, 0x01, 0, 0}, {0x538b, 0x98, 0, 0}, {0x5300, 0x08, 0, 0},
 	{0x5301, 0x30, 0, 0}, {0x5302, 0x30, 0, 0}, {0x5303, 0x10, 0, 0},
 	{0x5304, 0x08, 0, 0}, {0x5305, 0x30, 0, 0}, {0x5306, 0x1c, 0, 0},
-	{0x5307, 0x2c, 0, 0}, {0x5308, 0x25, 0, 0}, {0x5309, 0x08, 0, 0}, 
+	{0x5307, 0x2c, 0, 0}, {0x5308, 0x75, 0, 0}, {0x5309, 0x08, 0, 0}, 
 	{0x530a, 0x30, 0, 0},
 	{0x530b, 0x04, 0, 0}, {0x530c, 0x06, 0, 0}, {0x5480, 0x01, 0, 0},
 	{0x5481, 0x08, 0, 0}, {0x5482, 0x14, 0, 0}, {0x5483, 0x28, 0, 0},
@@ -1867,10 +1867,10 @@ restore_auto_gain:
 
 static int ov5640_set_sharpness(struct ov5640_dev *sensor, u8 value) 
 {
-	int ret;
-	u8 readval;
+	//int ret;
+	//u8 readval;
 
-	ret = ov5640_read_reg(sensor, 0x5308, &readval);
+/*	ret = ov5640_read_reg(sensor, 0x5308, &readval);
 	if (ret) {
 		printk(KERN_INFO "[*] ov5640: Error reading 0x5308 sharpness val"); 
 		return ret;
@@ -1882,14 +1882,14 @@ static int ov5640_set_sharpness(struct ov5640_dev *sensor, u8 value)
 		return ret;
 	} else {
 		printk(KERN_INFO "[*] ov5640: writing 0x5308 sharpness val"); 
-	}
+	}*/
 
 	return ov5640_write_reg(sensor, 0x5302, value);
 }
 
 static int ov5640_set_denoise(struct ov5640_dev *sensor, u8 value) 
 {
-	int ret;
+/*	int ret;
 	u8 readval;
 
 	ret = ov5640_read_reg(sensor, 0x5308, &readval);
@@ -1904,7 +1904,7 @@ static int ov5640_set_denoise(struct ov5640_dev *sensor, u8 value)
 		return ret;
 	} else {
 		printk(KERN_INFO "[*] ov5640: writing 0x5308 denoise val"); 
-	}
+	}*/
 
 	return ov5640_write_reg(sensor, 0x5306, value);
 }
