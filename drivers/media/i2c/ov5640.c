@@ -153,9 +153,21 @@ static const struct ov5640_pixfmt ov5640_formats[] = {
  * to set the MIPI CSI-2 virtual channel.
  */
 static unsigned int virtual_channel;
+static unsigned int denoise_threshold;
+static unsigned int sharpness_threshold;
+
 module_param(virtual_channel, uint, 0444);
 MODULE_PARM_DESC(virtual_channel,
 		 "MIPI CSI-2 virtual channel (0..3), default 0");
+
+module_param(denoise_threshold, uint, 0444);
+MODULE_PARM_DESC(denoise_threshold,
+		 "Set a denoise threshold in hex");
+
+module_param(sharpness_threshold, uint, 0444);
+MODULE_PARM_DESC(sharpness_threshold,
+		 "Set a sharpness threshold in hex");
+
 
 static const int ov5640_framerates[] = {
 	[OV5640_15_FPS] = 15,
@@ -393,7 +405,7 @@ static const struct reg_value ov5640_setting_XGA_1024_768[] = {
 	{0x3815, 0x31, 0, 0}, {0x3800, 0x00, 0, 0}, {0x3801, 0x00, 0, 0},
 	{0x3802, 0x00, 0, 0}, {0x3803, 0x04, 0, 0}, {0x3804, 0x0a, 0, 0},
 	{0x3805, 0x3f, 0, 0}, {0x3806, 0x07, 0, 0}, {0x3807, 0x9b, 0, 0},
-	{0x3810, 0x00, 0, 0},
+	{0x3810, 0x00, 0, 0},ov5640_init_params
 	{0x3811, 0x10, 0, 0}, {0x3812, 0x00, 0, 0}, {0x3813, 0x06, 0, 0},
 	{0x3618, 0x00, 0, 0}, {0x3612, 0x29, 0, 0}, {0x3708, 0x64, 0, 0},
 	{0x3709, 0x52, 0, 0}, {0x370c, 0x03, 0, 0}, {0x3a02, 0x03, 0, 0},
@@ -1842,7 +1854,7 @@ static int ov5640_set_mode(struct ov5640_dev *sensor)
 	if (ret < 0)
 		return ret;
 
-	ret = ov5640_set_sharpness(sensor, 0x02); //was 0x08
+	ret = ov5640_set_sharpness(sensor, sharpness_threshold); //was 0x08
 	if (ret < 0) {
 		printk(KERN_INFO "[*] ov5640: Error writing 0x5302 sharpness val");
 		return ret;
@@ -1850,7 +1862,7 @@ static int ov5640_set_mode(struct ov5640_dev *sensor)
 		printk(KERN_INFO "[*] ov5640: Write to 0x5302 sharpness val");
 	}
 
-	ret = ov5640_set_denoise(sensor, 0x10); //was 0x04
+	ret = ov5640_set_denoise(sensor, sharpness_threshold); //was 0x04
 	if (ret < 0) {
 		printk(KERN_INFO "[*] ov5640: Error writing 0x5306 denoise val"); 
 		return ret;
@@ -1875,44 +1887,19 @@ restore_auto_gain:
 
 static int ov5640_set_sharpness(struct ov5640_dev *sensor, u8 value) 
 {
-	//int ret;
-	//u8 readval;
-
-/*	ret = ov5640_read_reg(sensor, 0x5308, &readval);
-	if (ret) {
-		printk(KERN_INFO "[*] ov5640: Error reading 0x5308 sharpness val"); 
-		return ret;
+	if (value == NULL) {
+		return ov5640_write_reg(sensor, 0x5302, 0x1f);
 	}
-
-	ret = ov5640_write_reg(sensor, 0x5308, readval|0x40);
-	if (ret) {
-		printk(KERN_INFO "[*] ov5640: Error writing 0x5308 sharpness val"); 
-		return ret;
-	} else {
-		printk(KERN_INFO "[*] ov5640: writing 0x5308 sharpness val"); 
-	}*/
 
 	return ov5640_write_reg(sensor, 0x5302, value);
 }
 
 static int ov5640_set_denoise(struct ov5640_dev *sensor, u8 value) 
 {
-/*	int ret;
-	u8 readval;
 
-	ret = ov5640_read_reg(sensor, 0x5308, &readval);
-	if (ret) {
-		printk(KERN_INFO "[*] ov5640: Error reading 0x5308 denoise val"); 
-		return ret;
+	if (value == NULL) {
+		return ov5640_write_reg(sensor, 0x5302, 0x06);
 	}
-
-	ret = ov5640_write_reg(sensor, 0x5308, readval|0x10);
-	if (ret) {
-		printk(KERN_INFO "[*] ov5640: Error writing 0x5308 denoise val"); 
-		return ret;
-	} else {
-		printk(KERN_INFO "[*] ov5640: writing 0x5308 denoise val"); 
-	}*/
 
 	return ov5640_write_reg(sensor, 0x5306, value);
 }
