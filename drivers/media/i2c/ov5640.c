@@ -2627,6 +2627,7 @@ static int ov5640_s_ctrl(struct v4l2_ctrl *ctrl)
 		break;
 	case V4L2_CID_NIGHT_MODE:
 		ret = ov5640_set_night_mode(sensor, ctrl->val);
+		break;
 	default:
 		ret = -EINVAL;
 		break;
