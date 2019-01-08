@@ -294,6 +294,9 @@ static inline struct v4l2_subdev *ctrl_to_sd(struct v4l2_ctrl *ctrl)
  * over i2c.
  */
 /* YUV422 UYVY VGA@30fps */
+
+//0x3a13 (AEC_CTRL_13 pregain value) WAS 0x43 (pre-gain enable, 3x gain)
+//Now it is 0x40 (pre-gain enable, 1x gain)
 static const struct reg_value ov5640_init_setting_30fps_VGA[] = {
 	{0x3103, 0x11, 0, 0}, {0x3008, 0x82, 0, 5}, {0x3008, 0x42, 0, 0},
 	{0x3103, 0x03, 0, 0}, {0x3017, 0x00, 0, 0}, {0x3018, 0x00, 0, 0},
@@ -304,7 +307,7 @@ static const struct reg_value ov5640_init_setting_30fps_VGA[] = {
 	{0x3705, 0x1a, 0, 0}, {0x3905, 0x02, 0, 0}, {0x3906, 0x10, 0, 0},
 	{0x3901, 0x0a, 0, 0}, {0x3731, 0x12, 0, 0}, {0x3600, 0x08, 0, 0},
 	{0x3601, 0x33, 0, 0}, {0x302d, 0x60, 0, 0}, {0x3620, 0x52, 0, 0},
-	{0x371b, 0x20, 0, 0}, {0x471c, 0x50, 0, 0}, {0x3a13, 0x43, 0, 0},
+	{0x371b, 0x20, 0, 0}, {0x471c, 0x50, 0, 0}, {0x3a13, 0x40, 0, 0},
 	{0x3a18, 0x00, 0, 0}, {0x3a19, 0xf8, 0, 0}, {0x3635, 0x13, 0, 0},
 	{0x3636, 0x03, 0, 0}, {0x3634, 0x40, 0, 0}, {0x3622, 0x01, 0, 0},
 	{0x3c01, 0xa4, 0, 0}, {0x3c04, 0x28, 0, 0}, {0x3c05, 0x98, 0, 0},
@@ -1369,6 +1372,11 @@ static int ov5640_get_sysclk(struct ov5640_dev *sensor)
 
 static int ov5640_set_night_mode(struct ov5640_dev *sensor, bool on)
 {
+	ret = ov5640_write_reg(sensor, 0x3a17, 0x00);
+	if (ret) {
+		printk(KERN_INFO "[*] ov5640: Error setting night mode gain setting");
+		return ret;
+	}
 
 	//flip bit 2 off or on to enable/disable night mode...
 	return ov5640_mod_reg(sensor, OV5640_REG_AEC_CTRL00,
