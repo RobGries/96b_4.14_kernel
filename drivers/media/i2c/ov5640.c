@@ -1642,7 +1642,7 @@ static int ov5640_set_mode_exposure_calc(struct ov5640_dev *sensor,
 		return ret;
 
 	/* turn off night mode for capture */
-	ret = ov5640_set_night_mode(sensor, FALSE);
+	ret = ov5640_set_night_mode(sensor, false);
 	if (ret < 0){
 		printk(KERN_INFO "[*] ov5640: Error unsetting night mode");
 		return ret;
