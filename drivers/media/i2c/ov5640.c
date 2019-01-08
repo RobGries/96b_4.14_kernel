@@ -1372,6 +1372,8 @@ static int ov5640_get_sysclk(struct ov5640_dev *sensor)
 
 static int ov5640_set_night_mode(struct ov5640_dev *sensor, bool on)
 {
+	int ret;
+
 	ret = ov5640_write_reg(sensor, 0x3a17, 0x00);
 	if (ret) {
 		printk(KERN_INFO "[*] ov5640: Error setting night mode gain setting");
