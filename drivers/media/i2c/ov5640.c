@@ -2027,7 +2027,7 @@ static int ov5640_restore_mode(struct ov5640_dev *sensor)
 		switch (init_regs) {
 		case 0 :
 			printk(KERN_INFO "[*] ov5640: Using Stock init reg map");
-			active_regs = &ov5640_mode_stock_init_data;
+			active_regs = &ov5640_init_setting_30fps_VGA;
 			break;
 		case 1 :
 		case 5 :
@@ -2036,7 +2036,7 @@ static int ov5640_restore_mode(struct ov5640_dev *sensor)
 			break;
 		default :
 			printk(KERN_INFO "[*] ov5640: Using Stock init reg map");
-			active_regs = &ov5640_mode_stock_init_data;
+			active_regs = &ov5640_init_setting_30fps_VGA;
 			break;
 	}
 
