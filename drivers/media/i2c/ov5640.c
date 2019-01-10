@@ -300,7 +300,7 @@ static inline struct v4l2_subdev *ctrl_to_sd(struct v4l2_ctrl *ctrl)
 /* YUV422 UYVY VGA@30fps */
 
 //0x3a13 (AEC_CTRL_13 pregain value) WAS 0x43 (pre-gain enable, 3x gain)
-//Now it is 0x40 (pre-gain enable, 1x gain)
+//Now it is 0x40 (pre-gain enable, 1x gain):
 static const struct reg_value ov5640_init_setting_30fps_VGA[] = {
 	{0x3103, 0x11, 0, 0}, {0x3008, 0x82, 0, 5}, {0x3008, 0x42, 0, 0},
 	{0x3103, 0x03, 0, 0}, {0x3017, 0x00, 0, 0}, {0x3018, 0x00, 0, 0},
@@ -2027,7 +2027,7 @@ static int ov5640_restore_mode(struct ov5640_dev *sensor)
 		switch (init_regs) {
 		case 0 :
 			printk(KERN_INFO "[*] ov5640: Using Stock init reg map");
-			active_regs = &ov5640_init_setting_30fps_VGA;
+			active_regs = &ov5640_mode_init_data;
 			break;
 		case 1 :
 		case 5 :
@@ -2036,7 +2036,7 @@ static int ov5640_restore_mode(struct ov5640_dev *sensor)
 			break;
 		default :
 			printk(KERN_INFO "[*] ov5640: Using Stock init reg map");
-			active_regs = &ov5640_init_setting_30fps_VGA;
+			active_regs = &ov5640_mode_init_data;
 			break;
 	}
 
