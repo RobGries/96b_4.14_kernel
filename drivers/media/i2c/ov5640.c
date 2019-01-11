@@ -2024,7 +2024,7 @@ static int ov5640_restore_mode(struct ov5640_dev *sensor)
     u8 init_regs = ov5640_init_params;
 	const struct ov5640_mode_info *active_regs;
 
-		switch (init_regs) {
+	switch (init_regs) {
 		case 0 :
 			printk(KERN_INFO "[*] ov5640: Using Stock init reg map");
 			active_regs = &ov5640_mode_init_data;
@@ -2042,11 +2042,11 @@ static int ov5640_restore_mode(struct ov5640_dev *sensor)
 
 
 	/* first load the initial register values */
-	ret = ov5640_load_regs(sensor, &active_regs);
+	ret = ov5640_load_regs(sensor, active_regs);
 	if (ret < 0)
 		return ret;
 	
-	sensor->last_mode = &active_regs;
+	sensor->last_mode = active_regs;
 
 	ret = ov5640_mod_reg(sensor, OV5640_REG_SYS_ROOT_DIVIDER, 0x3f,
 			     (ilog2(OV5640_SCLK2X_ROOT_DIV) << 2) |
