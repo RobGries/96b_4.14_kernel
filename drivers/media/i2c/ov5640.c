@@ -1474,10 +1474,35 @@ static int ov5640_set_night_mode(struct ov5640_dev *sensor, bool on)
 {
 	int ret;
 
-	ret = ov5640_write_reg(sensor, 0x3a17, 0x00);
-	if (ret) {
-		printk(KERN_INFO "[*] ov5640: Error setting night mode gain setting");
-		return ret;
+	if (on) {
+		printk(KERN_INFO "[*] ov5640: NightMode Requested - Image=GrayScale, NIGHTMODE:ON");
+		ret = ov5640_mod_reg(sensor, OV5640_REG_SDE_CTRL0, BIT(1), BIT(1));
+		if (ret) {
+			printk(KERN_INFO "[*] ov5640: Error setting night mode saturation -- OV5640_REG_SDE_CTRL4");
+			return ret;
+		}
+		ret = ov5640_write_reg(sensor, OV5640_REG_SDE_CTRL3, 1 & 0xff);
+		if (ret) {
+			printk(KERN_INFO "[*] ov5640: Error setting night mode saturation -- OV5640_REG_SDE_CTRL3");
+			return ret;
+		}
+	    ret = ov5640_write_reg(sensor, OV5640_REG_SDE_CTRL4, 1 & 0xff);		
+		if (ret) {
+			printk(KERN_INFO "[*] ov5640: Error setting night mode saturation -- OV5640_REG_SDE_CTRL4");
+			return ret;
+		}
+	    ret = ov5640_write_reg(sensor, 0x3a17, 0x00);
+		if (ret) {
+			printk(KERN_INFO "[*] ov5640: Error setting night mode gain setting");
+			return ret;
+		} 
+	} else {
+    	printk(KERN_INFO "[*] ov5640: NightMode - Image=FullColor, NIGHTMODE:OFF");
+		ret = ov5640_mod_reg(sensor, OV5640_REG_SDE_CTRL0, BIT(1), 0);
+		if (ret) {
+			printk(KERN_INFO "[*] ov5640: Error unsetting night mode saturation -- OV5640_REG_SDE_CTRL0");
+			return ret;
+		} 
 	}
 
 	//flip bit 2 off or on to enable/disable night mode...
