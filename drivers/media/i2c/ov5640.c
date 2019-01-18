@@ -176,6 +176,7 @@ struct ov5640_ctrls {
 	struct v4l2_ctrl *contrast;
 	struct v4l2_ctrl *hue;
 	struct v4l2_ctrl *test_pattern;
+	struct v4l2_ctrl *night_mode;
 };
 
 struct ov5640_dev {
@@ -1814,18 +1815,44 @@ static int ov5640_get_sysclk(struct ov5640_dev *sensor)
 	return sysclk;
 }
 
-static int ov5640_set_night_mode(struct ov5640_dev *sensor)
+static int ov5640_set_night_mode(struct ov5640_dev *sensor, bool on)
 {
-	 /* read HTS from register settings */
-	u8 mode;
 	int ret;
 
-	ret = ov5640_read_reg(sensor, OV5640_REG_AEC_CTRL00, &mode);
-	if (ret)
-		return ret;
-	mode &= 0xfb;
-	return ov5640_write_reg(sensor, OV5640_REG_AEC_CTRL00, mode);
+	if (on) {
+		ret = ov5640_mod_reg(sensor, OV5640_REG_SDE_CTRL0, BIT(1), BIT(1));
+		if (ret) {
+			printk(KERN_INFO "[*] ov5640: Error setting night mode saturation -- OV5640_REG_SDE_CTRL4");
+			return ret;
+		}
+		ret = ov5640_write_reg(sensor, OV5640_REG_SDE_CTRL3, 1 & 0xff);
+		if (ret) {
+			printk(KERN_INFO "[*] ov5640: Error setting night mode saturation -- OV5640_REG_SDE_CTRL3");
+			return ret;
+		}
+	    ret = ov5640_write_reg(sensor, OV5640_REG_SDE_CTRL4, 1 & 0xff);		
+		if (ret) {
+			printk(KERN_INFO "[*] ov5640: Error setting night mode saturation -- OV5640_REG_SDE_CTRL4");
+			return ret;
+		}
+	    ret = ov5640_write_reg(sensor, 0x3a17, 0x00);
+		if (ret) {
+			printk(KERN_INFO "[*] ov5640: Error setting night mode gain setting");
+			return ret;
+		} 
+	} else {
+		ret = ov5640_mod_reg(sensor, OV5640_REG_SDE_CTRL0, BIT(1), 0);
+		if (ret) {
+			printk(KERN_INFO "[*] ov5640: Error unsetting night mode saturation -- OV5640_REG_SDE_CTRL0");
+			return ret;
+		} 
+	}
+
+	//flip bit 2 off or on to enable/disable night mode...
+	return ov5640_mod_reg(sensor, OV5640_REG_AEC_CTRL00,
+		      BIT(2), on ? 0 : BIT(2));
 }
+
 
 static int ov5640_get_hts(struct ov5640_dev *sensor)
 {
@@ -2075,10 +2102,11 @@ static int ov5640_set_mode_exposure_calc(
 	if (ret)
 		return ret;
 
-	/* turn off night mode for capture */
-	ret = ov5640_set_night_mode(sensor);
-	if (ret < 0)
+	ret = ov5640_set_night_mode(sensor, false);
+	if (ret < 0){
+		printk(KERN_INFO "[*] ov5640: Error unsetting night mode");
 		return ret;
+	}
 
 	/* Write capture setting */
 	ret = ov5640_load_regs(sensor, mode);
@@ -2768,6 +2796,9 @@ static int ov5640_s_ctrl(struct v4l2_ctrl *ctrl)
 	case V4L2_CID_TEST_PATTERN:
 		ret = ov5640_set_ctrl_test_pattern(sensor, ctrl->val);
 		break;
+	case V4L2_CID_NIGHT_MODE:
+		ret = ov5640_set_night_mode(sensor, ctrl->val);
+		break;
 	default:
 		ret = -EINVAL;
 		break;
@@ -2833,6 +2864,9 @@ static int ov5640_init_controls(struct ov5640_dev *sensor)
 					     ARRAY_SIZE(test_pattern_menu) - 1,
 					     0, 0, test_pattern_menu);
 
+	ctrls->night_mode = v4l2_ctrl_new_std(hdl, ops, V4L2_CID_NIGHT_MODE,
+				     0, 1, 1, 0);
+	
 	if (hdl->error) {
 		ret = hdl->error;
 		goto free_ctrls;
