@@ -2078,21 +2078,21 @@ static int ov5640_set_mode(struct ov5640_dev *sensor)
 	if (ret < 0)
 		return ret;
 
-	ret = ov5640_set_sharpness(sensor, sharpness_threshold); //was 0x08
+/*	ret = ov5640_set_sharpness(sensor, sharpness_threshold); //was 0x08
 	if (ret < 0) {
 		printk(KERN_INFO "[*] ov5640: Error writing 0x5302 sharpness val");
 		return ret;
 	} else {
 		printk(KERN_INFO "[*] ov5640: Write to 0x5302 sharpness val");
-	}
+	}*/
 
-	ret = ov5640_set_denoise(sensor, sharpness_threshold); //was 0x04
+/*	ret = ov5640_set_denoise(sensor, sharpness_threshold); //was 0x04
 	if (ret < 0) {
 		printk(KERN_INFO "[*] ov5640: Error writing 0x5306 denoise val"); 
 		return ret;
 	} else {
 		printk(KERN_INFO "[*] ov5640: Write to 0x5306 denoise val"); 
-	}
+	}*/
 
 	sensor->pending_mode_change = false;
 	sensor->last_mode = mode;
@@ -2563,12 +2563,12 @@ static int ov5640_set_framefmt(struct ov5640_dev *sensor,
 	}
 
     /*Sets avg for first plane of image while in yuv422 mode, we always operate in yuv422 mode due to encoder*/
-	if (mux == OV5640_FMT_MUX_YUV422) {
+/*	if (mux == OV5640_FMT_MUX_YUV422) {
 		ret = ov5640_write_reg(sensor, OV5640_REG_FORMAT_CONTROL01, OV5640_REG_VAL_UV_AVG);
 		if (ret)
 			return ret;
 	}
-
+*/
 	/* FORMAT CONTROL00: YUV and RGB formatting */
 	ret = ov5640_write_reg(sensor, OV5640_REG_FORMAT_CONTROL00, fmt);
 	if (ret)
