@@ -717,7 +717,7 @@ static int venc_set_properties(struct venus_inst *inst)
 	 * n = 1 - all I-frames will be IDR frames
 	 * n > 1 - every n-th I-frame will be IDR frame
 	 */
-	idrp.idr_period = 1; // was 0 now 1;
+	idrp.idr_period = 0; // was 0 now 1;
 	ret = hfi_session_set_property(inst, ptype, &idrp);
 	if (ret)
 		return ret;
