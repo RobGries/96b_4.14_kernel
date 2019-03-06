@@ -3301,7 +3301,7 @@ static int ov5640_probe(struct i2c_client *client,
 		return PTR_ERR(sensor->xclk);
 	}
 
-	clk_set_rate(sensor->xclk, 23880000);
+	//clk_set_rate(sensor->xclk, 23880000);
 
 	sensor->xclk_freq = clk_get_rate(sensor->xclk);
 	if (sensor->xclk_freq < OV5640_XCLK_MIN ||
