@@ -2015,10 +2015,16 @@ static int ov5640_set_mode(struct ov5640_dev *sensor)
 	orig_dn_mode = orig_mode->dn_mode;
 
 	pclock = mode->vtot * mode->htot * ov5640_framerates[sensor->current_fr];
-	ret = __v4l2_ctrl_s_ctrl_int64(sensor->ctrls.pixel_clock, pclock);
-	if (ret < 0)
-		 return ret;
 
+	printk(KERN_INFO "[*] ov5640: setting pixel_clock to %lu", pclock);
+
+	ret = __v4l2_ctrl_s_ctrl_int64(sensor->ctrls.pixel_clock, pclock);
+
+	if (ret < 0) {
+		printk(KERN_INFO "[*] ov5640: Error setting pixel_clock value")
+		return ret;
+	}
+		 
 	/* auto gain and exposure must be turned off when changing modes */
 	if (auto_gain) {
 		ret = ov5640_set_autogain(sensor, false);
@@ -2961,7 +2967,7 @@ static int ov5640_init_controls(struct ov5640_dev *sensor)
 
 	/* Pixel Clock (default of 96MHz) */
 	ctrls->pixel_clock = v4l2_ctrl_new_std(hdl, ops, V4L2_CID_PIXEL_RATE,
-					       1, INT_MAX, 1, 1);
+					       1, INT_MAX, 1, 168000000);
 	ctrls->saturation = v4l2_ctrl_new_std(hdl, ops, V4L2_CID_SATURATION,
 					      0, 255, 1, 64);
 	ctrls->hue = v4l2_ctrl_new_std(hdl, ops, V4L2_CID_HUE,
