@@ -2007,11 +2007,17 @@ static int ov5640_set_mode(struct ov5640_dev *sensor)
 	enum ov5640_downsize_mode dn_mode, orig_dn_mode;
 	bool auto_gain = sensor->ctrls.auto_gain->val == 1;
 	bool auto_exp =  sensor->ctrls.auto_exp->val == V4L2_EXPOSURE_AUTO;
+	unsigned long pclock;
 	unsigned long rate;
 	int ret;
 
 	dn_mode = mode->dn_mode;
 	orig_dn_mode = orig_mode->dn_mode;
+
+	pclock = mode->vtot * mode->htot * ov5640_framerates[sensor->current_fr];
+	ret = __v4l2_ctrl_s_ctrl_int64(sensor->ctrls.pixel_clock, pclock);
+	if (ret < 0)
+		 return ret;
 
 	/* auto gain and exposure must be turned off when changing modes */
 	if (auto_gain) {
@@ -2955,7 +2961,7 @@ static int ov5640_init_controls(struct ov5640_dev *sensor)
 
 	/* Pixel Clock (default of 96MHz) */
 	ctrls->pixel_clock = v4l2_ctrl_new_std(hdl, ops, V4L2_CID_PIXEL_RATE,
-					1, INT_MAX, 1, 168000000); //was 96000000
+					       1, INT_MAX, 1, 1);
 	ctrls->saturation = v4l2_ctrl_new_std(hdl, ops, V4L2_CID_SATURATION,
 					      0, 255, 1, 64);
 	ctrls->hue = v4l2_ctrl_new_std(hdl, ops, V4L2_CID_HUE,
@@ -3288,6 +3294,8 @@ static int ov5640_probe(struct i2c_client *client,
 		dev_err(dev, "failed to get xclk\n");
 		return PTR_ERR(sensor->xclk);
 	}
+
+	clk_set_rate(sensor->xclk, 23880000);
 
 	sensor->xclk_freq = clk_get_rate(sensor->xclk);
 	if (sensor->xclk_freq < OV5640_XCLK_MIN ||
