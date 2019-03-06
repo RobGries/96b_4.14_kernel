@@ -2021,7 +2021,7 @@ static int ov5640_set_mode(struct ov5640_dev *sensor)
 	ret = __v4l2_ctrl_s_ctrl_int64(sensor->ctrls.pixel_clock, pclock);
 
 	if (ret < 0) {
-		printk(KERN_INFO "[*] ov5640: Error setting pixel_clock value")
+		printk(KERN_INFO "[*] ov5640: Error setting pixel_clock value");
 		return ret;
 	}
 		 
