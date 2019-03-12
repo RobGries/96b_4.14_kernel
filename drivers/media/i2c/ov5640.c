@@ -2330,7 +2330,7 @@ static int ov5640_restore_mode(struct ov5640_dev *sensor)
 			active_regs = &ov5640_mode_lenc4_init_data;
 			break;
 		case 5 :
-			printk(KERN_INFO "[*] ov5640: Using OV5640 cwf_LENC_setting.txt reg map");
+			printk(KERN_INFO "[*] ov5640: Using OV5640 lenc setting 03-12-19");
 			active_regs = &ov5640_mode_cwf_LENC_init_data;
 			break;
 		case 6 :
