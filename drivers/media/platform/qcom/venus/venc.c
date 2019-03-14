@@ -640,6 +640,7 @@ static int venc_set_properties(struct venus_inst *inst)
 	struct hfi_idr_period idrp;
 	struct hfi_quantization quant;
 	struct hfi_quantization_range quant_range;
+	struct hfi_intra_refresh intra_refresh_setting;
 	u32 ptype, rate_control, bitrate, profile = 0, level = 0;
 	int ret;
 
@@ -683,6 +684,21 @@ static int venc_set_properties(struct venus_inst *inst)
 		deblock.slice_beta_offset = ctr->h264_loop_filter_beta;
 
 		ret = hfi_session_set_property(inst, ptype, &deblock);
+		if (ret)
+			return ret;
+				
+		//	u32 mode;
+		// u32 air_mbs;
+		// u32 air_ref;
+		// u32 cir_mbs;
+
+		ptype = HFI_PROPERTY_PARAM_VENC_INTRA_REFRESH;
+		intra_refresh_setting.mode = HFI_INTRA_REFRESH_CYCLIC;
+		intra_refresh_setting.air_mbs = 0;
+		intra_refresh_setting.air_ref = 0;
+		intra_refresh_setting.cir_mbs = 0;
+
+		ret = hfi_session_set_property(inst, ptype, &intra_refresh_setting);
 		if (ret)
 			return ret;
 	}
@@ -750,7 +766,6 @@ static int venc_set_properties(struct venus_inst *inst)
 	ret = hfi_session_set_property(inst, ptype, &brate);
 	if (ret)
 		return ret;
-
 	ptype = HFI_PROPERTY_PARAM_VENC_SESSION_QP;
 	quant.qp_i = ctr->h264_i_qp;
 	quant.qp_p = ctr->h264_p_qp;
