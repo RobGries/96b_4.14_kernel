@@ -2477,6 +2477,9 @@ static int ov5640_try_frame_interval(struct ov5640_dev *sensor,
 	maxfps = ov5640_framerates[OV5640_30_FPS];
 
 	if (fi->numerator == 0) {
+
+		printk(KERN_INFO "[*] ov5640: ov5640_try_frame_interval: 30FPS returned!");
+
 		fi->denominator = maxfps;
 		fi->numerator = 1;
 		return OV5640_30_FPS;
@@ -2496,7 +2499,14 @@ static int ov5640_try_frame_interval(struct ov5640_dev *sensor,
 
 	ret = (fi->denominator == minfps) ? OV5640_15_FPS : OV5640_30_FPS;
 
+
+
 	mode = ov5640_find_mode(sensor, ret, width, height, false);
+
+
+	printk(KERN_INFO "[*] ov5640: ov5640_try_frame_interval: %d", ret);
+
+
 	return mode ? ret : -EINVAL;
 }
 
@@ -2921,6 +2931,8 @@ static int ov5640_enum_frame_interval(
 
 	tpf.numerator = 1;
 	tpf.denominator = ov5640_framerates[fie->index];
+
+	printk(KERN_INFO "[*] ov5640: ov5640_enum_frame_interval: numerator=%d denominator=%d", tpf.numerator, tpf.denominator);
 
 	ret = ov5640_try_frame_interval(sensor, &tpf,
 					fie->width, fie->height);
