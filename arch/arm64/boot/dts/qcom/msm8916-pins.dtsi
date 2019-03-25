@@ -22,8 +22,7 @@
 		pinconf {
 			pins = "gpio0", "gpio1";
 			drive-strength = <16>;
-			bias-pull-down;
-
+			bias-disable;
 		};
 	};
 
