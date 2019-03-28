@@ -84,8 +84,7 @@ static int venc_op_s_ctrl(struct v4l2_ctrl *ctrl)
 	u32 bframes;
 	u32 ptype;
 	int ret;
-	u32 ptype;
-
+	
 	switch (ctrl->id) {
 	case V4L2_CID_MPEG_VIDEO_BITRATE_MODE:
 		ctr->bitrate_mode = ctrl->val;
