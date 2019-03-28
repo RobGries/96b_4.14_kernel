@@ -84,7 +84,7 @@ static int venc_op_s_ctrl(struct v4l2_ctrl *ctrl)
 	u32 bframes;
 	u32 ptype;
 	int ret;
-	
+
 	switch (ctrl->id) {
 	case V4L2_CID_MPEG_VIDEO_BITRATE_MODE:
 		ctr->bitrate_mode = ctrl->val;
@@ -191,13 +191,19 @@ static int venc_op_s_ctrl(struct v4l2_ctrl *ctrl)
 		break;
 	case V4L2_CID_MPEG_VIDEO_FORCE_KEY_FRAME:
 		mutex_lock(&inst->lock);
+		printk(KERN_INFO "[venc] keyframe insertion request!");
+
 		if (inst->streamon_out && inst->streamon_cap) {
 			ptype = HFI_PROPERTY_CONFIG_VENC_REQUEST_SYNC_FRAME;
 			ret = hfi_session_set_property(inst, ptype, &en);
 
 			if (ret) {
 				mutex_unlock(&inst->lock);
+				printk(KERN_INFO "[venc] keyframe insertion failure!");
 				return ret;
+			}
+			else {
+				printk(KERN_INFO "[venc] keyframe insertion success!");
 			}
 		}
 		mutex_unlock(&inst->lock);
