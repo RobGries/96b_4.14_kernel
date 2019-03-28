@@ -193,7 +193,7 @@ static int venc_op_s_ctrl(struct v4l2_ctrl *ctrl)
 		mutex_lock(&inst->lock);
 		printk(KERN_INFO "[venc] keyframe insertion request!");
 
-		if (inst->streamon_out && inst->streamon_cap) {
+		//if (inst->streamon_out && inst->streamon_cap) {
 			ptype = HFI_PROPERTY_CONFIG_VENC_REQUEST_SYNC_FRAME;
 			ret = hfi_session_set_property(inst, ptype, &en);
 
@@ -205,7 +205,7 @@ static int venc_op_s_ctrl(struct v4l2_ctrl *ctrl)
 			else {
 				printk(KERN_INFO "[venc] keyframe insertion success!");
 			}
-		}
+		//}
 		mutex_unlock(&inst->lock);
 		break;
 	default:
