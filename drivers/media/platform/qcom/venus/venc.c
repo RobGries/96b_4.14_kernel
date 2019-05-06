@@ -658,6 +658,7 @@ static int venc_set_properties(struct venus_inst *inst)
 		struct hfi_h264_entropy_control entropy;
 		struct hfi_h264_db_control deblock;
 		struct hfi_h264_vui_bitstream_restric restric;
+		struct hfi_disable_rc_timestamp disabletimestamp;
 
 		ptype = HFI_PROPERTY_PARAM_VENC_H264_VUI_TIMING_INFO;
 		info.enable = 1;
@@ -679,6 +680,22 @@ static int venc_set_properties(struct venus_inst *inst)
 		else 
 		{
 			printk("SUCCESS! venc: has set vui_bitstream_restriction\n");
+		}
+
+		//
+		//disabletimestamp
+
+		ptype = HFI_PROPERTY_PARAM_VENC_DISABLE_RC_TIMESTAMP;
+		disabletimestamp.enable = 1;
+		ret = hfi_session_set_property(inst, ptype, &disabletimestamp);
+		if (ret)
+		{
+			printk("ERROR! venc: cannot set disable_rc_timestamp\n");
+			return ret;
+		} 
+		else 
+		{
+			printk("SUCCESS! venc: has set disable_rc_timestamp\n");
 		}
 
 		ptype = HFI_PROPERTY_PARAM_VENC_H264_ENTROPY_CONTROL;

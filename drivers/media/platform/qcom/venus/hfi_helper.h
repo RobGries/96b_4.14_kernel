@@ -777,6 +777,10 @@ struct hfi_h264_vui_bitstream_restric {
     u32 enable;
 };
 
+struct hfi_disable_rc_timestamp {
+    u32 enable;
+};
+
 #define HFI_COLOR_FORMAT_MONOCHROME		0x01
 #define HFI_COLOR_FORMAT_NV12			0x02
 #define HFI_COLOR_FORMAT_NV21			0x03
