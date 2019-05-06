@@ -657,6 +657,7 @@ static int venc_set_properties(struct venus_inst *inst)
 		struct hfi_h264_vui_timing_info info;
 		struct hfi_h264_entropy_control entropy;
 		struct hfi_h264_db_control deblock;
+		struct hfi_h264_vui_bitstream_restric restric;
 
 		ptype = HFI_PROPERTY_PARAM_VENC_H264_VUI_TIMING_INFO;
 		info.enable = 1;
@@ -666,6 +667,19 @@ static int venc_set_properties(struct venus_inst *inst)
 		ret = hfi_session_set_property(inst, ptype, &info);
 		if (ret)
 			return ret;
+
+		ptype = HFI_PROPERTY_PARAM_VENC_H264_VUI_BITSTREAM_RESTRC;
+		restric.enable = 1;
+		ret = hfi_session_set_property(inst, ptype, &restric);
+		if (ret)
+		{
+			printk("ERROR! venc: cannot set vui_bitstream_restriction\n");
+			return ret;
+		} 
+		else 
+		{
+			printk("SUCCESS! venc: has set vui_bitstream_restriction\n");
+		}
 
 		ptype = HFI_PROPERTY_PARAM_VENC_H264_ENTROPY_CONTROL;
 		entropy.entropy_mode = venc_v4l2_to_hfi(
