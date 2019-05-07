@@ -659,6 +659,7 @@ static int venc_set_properties(struct venus_inst *inst)
 		struct hfi_h264_db_control deblock;
 		struct hfi_h264_vui_bitstream_restric restric;
 		struct hfi_disable_rc_timestamp disabletimestamp;
+		struct hfi_generate_audnal audnal;
 
 		ptype = HFI_PROPERTY_PARAM_VENC_H264_VUI_TIMING_INFO;
 		info.enable = 1;
@@ -696,6 +697,21 @@ static int venc_set_properties(struct venus_inst *inst)
 		else 
 		{
 			printk("SUCCESS! venc: has set disable_rc_timestamp\n");
+		}
+
+		//HFI_PROPERTY_PARAM_VENC_H264_GENERATE_AUDNAL
+
+		ptype = HFI_PROPERTY_PARAM_VENC_H264_GENERATE_AUDNAL;
+		audnal.enable = 1;
+		ret = hfi_session_set_property(inst, ptype, &audnal);
+		if (ret)
+		{
+			printk("ERROR! venc: cannot set h264_generate_audnal\n");
+			return ret;
+		} 
+		else 
+		{
+			printk("SUCCESS! venc: has set h264_generate_audnal\n");
 		}
 
 		ptype = HFI_PROPERTY_PARAM_VENC_H264_ENTROPY_CONTROL;
