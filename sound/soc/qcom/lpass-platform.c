@@ -30,7 +30,7 @@ struct lpass_pcm_data {
 };
 
 #define LPASS_PLATFORM_BUFFER_SIZE	(16 * 1024)
-#define LPASS_PLATFORM_PERIODS		8192
+#define LPASS_PLATFORM_PERIODS		2
 
 static const struct snd_pcm_hardware lpass_platform_pcm_hardware = {
 	.info			=	SNDRV_PCM_INFO_MMAP |
@@ -47,9 +47,11 @@ static const struct snd_pcm_hardware lpass_platform_pcm_hardware = {
 	.channels_min		=	1,
 	.channels_max		=	8,
 	.buffer_bytes_max	=	LPASS_PLATFORM_BUFFER_SIZE,
-	.period_bytes_max	=	4096,
-	.period_bytes_min	=	2,
-	.periods_min		=	2,
+	.period_bytes_max	=	LPASS_PLATFORM_BUFFER_SIZE /
+						LPASS_PLATFORM_PERIODS,
+	.period_bytes_min	=	LPASS_PLATFORM_BUFFER_SIZE /
+						LPASS_PLATFORM_PERIODS,
+	.periods_min		=	LPASS_PLATFORM_PERIODS,
 	.periods_max		=	LPASS_PLATFORM_PERIODS,
 	.fifo_size		=	0,
 };
