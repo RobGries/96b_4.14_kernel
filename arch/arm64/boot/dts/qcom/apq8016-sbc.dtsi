@@ -153,10 +153,10 @@
 		};
 
 		mdss@1a00000 {
-			status = "okay";
+			status = "disabled";
 
 			mdp@1a01000 {
-				status = "okay";
+				status = "disabled";
 			};
 
 			dsi@1a98000 {
@@ -164,9 +164,7 @@
 			};
 
 			dsi-phy@1a98300 {
-				status = "okay";
-
-				vddio-supply = <&pm8916_l6>;
+				status = "disabled";
 			};
 		};
 
