@@ -25,6 +25,6 @@
 #include "main.h"
 
 int mwifiex_register_cfg80211(struct mwifiex_adapter *);
-bool disable_5ghz = true;
+static bool disable_5ghz = true;
 
 #endif
