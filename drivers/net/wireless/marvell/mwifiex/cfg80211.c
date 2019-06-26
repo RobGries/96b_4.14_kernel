@@ -1572,9 +1572,6 @@ static struct ieee80211_supported_band mwifiex_band_2ghz = {
 	.n_bitrates = ARRAY_SIZE(mwifiex_rates),
 };
 
-#if DISABLE_5GHZ
-static struct ieee80211_channel mwifiex_channels_5ghz[] = {};
-#else
 static struct ieee80211_channel mwifiex_channels_5ghz[] = {
 	{.center_freq = 5040, .hw_value = 8, },
 	{.center_freq = 5060, .hw_value = 12, },
@@ -1608,7 +1605,6 @@ static struct ieee80211_channel mwifiex_channels_5ghz[] = {
 	{.center_freq = 5805, .hw_value = 161, },
 	{.center_freq = 5825, .hw_value = 165, },
 };
-#endif
 
 static struct ieee80211_supported_band mwifiex_band_5ghz = {
 	.channels = mwifiex_channels_5ghz,

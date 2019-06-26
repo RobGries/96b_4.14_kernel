@@ -26,7 +26,4 @@
 
 int mwifiex_register_cfg80211(struct mwifiex_adapter *);
 
-// toggle for disabling 5GHz channels
-#define DISABLE_5GHZ 1
-
 #endif
