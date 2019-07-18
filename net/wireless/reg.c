@@ -2176,8 +2176,12 @@ static void reg_process_hint(struct regulatory_request *reg_request)
 
 	switch (reg_request->initiator) {
 	case NL80211_REGDOM_SET_BY_CORE:
-		treatment = reg_process_hint_core(reg_request);
-		break;
+		//treatment = reg_process_hint_core(reg_request);
+		//break;
+	    reg_process_hint_core(reg_request);
+	 	nl80211_send_reg_change_event(reg_request);
+	    reg_set_request_processed();
+	    return;
 	case NL80211_REGDOM_SET_BY_USER:
 		treatment = reg_process_hint_user(reg_request);
 		break;
