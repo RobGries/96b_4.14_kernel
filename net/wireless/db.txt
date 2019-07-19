@@ -1267,7 +1267,7 @@ country UG: DFS-FCC
     (5735 - 5835 @ 80), (30)
 
 country US: DFS-FCC
-    (2402 - 2472 @ 40), (20)
+    (2402 - 2472 @ 40), (30)
 
 country UY: DFS-FCC
     (2402 - 2482 @ 40), (20)
