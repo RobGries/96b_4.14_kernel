@@ -58,6 +58,7 @@ static const struct snd_pcm_hardware lpass_platform_pcm_hardware = {
 
 static int lpass_platform_pcmops_open(struct snd_pcm_substream *substream)
 {
+    printf("SND_DRIVER:: ENTER  -- OPEN\n");
 	struct snd_pcm_runtime *runtime = substream->runtime;
 	struct snd_soc_pcm_runtime *soc_runtime = substream->private_data;
 	struct snd_soc_dai *cpu_dai = soc_runtime->cpu_dai;
@@ -109,11 +110,15 @@ static int lpass_platform_pcmops_open(struct snd_pcm_substream *substream)
 
 	snd_pcm_set_runtime_buffer(substream, &substream->dma_buffer);
 
+	printf("SND_DRIVER:: EXIT  -- OPEN\n");
+
 	return 0;
 }
 
 static int lpass_platform_pcmops_close(struct snd_pcm_substream *substream)
 {
+
+    printf("SND_DRIVER:: ENTER  -- CLOSE\n");
 	struct snd_pcm_runtime *runtime = substream->runtime;
 	struct snd_soc_pcm_runtime *soc_runtime = substream->private_data;
 	struct lpass_data *drvdata =
@@ -126,6 +131,7 @@ static int lpass_platform_pcmops_close(struct snd_pcm_substream *substream)
 	drvdata->substream[data->dma_ch] = NULL;
 	if (v->free_dma_channel)
 		v->free_dma_channel(drvdata, data->dma_ch);
+    printf("SND_DRIVER:: EXIT  -- CLOSE\n");
 
 	return 0;
 }
@@ -226,6 +232,8 @@ static int lpass_platform_pcmops_hw_params(struct snd_pcm_substream *substream,
 
 static int lpass_platform_pcmops_hw_free(struct snd_pcm_substream *substream)
 {
+
+    printf("SND_DRIVER:: ENTER  -- HW_FREE\n");
 	struct snd_soc_pcm_runtime *soc_runtime = substream->private_data;
 	struct lpass_data *drvdata =
 		snd_soc_platform_get_drvdata(soc_runtime->platform);
@@ -240,6 +248,8 @@ static int lpass_platform_pcmops_hw_free(struct snd_pcm_substream *substream)
 	if (ret)
 		dev_err(soc_runtime->dev, "error writing to rdmactl reg: %d\n",
 			ret);
+
+    printf("SND_DRIVER:: EXIT  -- HW_FREE\n");
 
 	return ret;
 }
@@ -509,6 +519,7 @@ static irqreturn_t lpass_platform_lpaif_irq(int irq, void *data)
 
 static int lpass_platform_pcm_new(struct snd_soc_pcm_runtime *soc_runtime)
 {
+    printf("SND_DRIVER:: ENTER  -- PCM_NEW\n");
 	struct snd_pcm *pcm = soc_runtime->pcm;
 	struct snd_pcm_substream *psubstream, *csubstream;
 	int ret = -EINVAL;
@@ -539,11 +550,15 @@ static int lpass_platform_pcm_new(struct snd_soc_pcm_runtime *soc_runtime)
 
 	}
 
+    printf("SND_DRIVER:: EXIT  -- PCM_NEW\n");
+
 	return 0;
 }
 
 static void lpass_platform_pcm_free(struct snd_pcm *pcm)
 {
+
+    printf("SND_DRIVER:: ENTER  -- PCM_FREE\n");
 	struct snd_pcm_substream *substream;
 	int i;
 
@@ -555,6 +570,7 @@ static void lpass_platform_pcm_free(struct snd_pcm *pcm)
 			substream->dma_buffer.addr = 0;
 		}
 	}
+    printf("SND_DRIVER:: EXIT  -- PCM_FREE\n");
 }
 
 static const struct snd_soc_platform_driver lpass_platform_driver = {
