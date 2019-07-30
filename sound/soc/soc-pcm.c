@@ -31,7 +31,7 @@
 #include <sound/soc.h>
 #include <sound/soc-dpcm.h>
 #include <sound/initval.h>
-#include "sound/soc/qcom/debug.h"
+#include "soc/qcom/debug.h"
 
 #define DPCM_MAX_BE_USERS	8
 
