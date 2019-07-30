@@ -23,8 +23,8 @@
 #include <sound/soc.h>
 #include "lpass-lpaif-reg.h"
 #include "lpass.h"
+#include "debug.h"
 
-static short lpass_platform_verbose = 0;
 module_param(lpass_platform_verbose, short, 0444); 
 MODULE_PARM_DESC(lpass_platform_verbose, "(0) default - no debug prints, (1) full verbosity");
 

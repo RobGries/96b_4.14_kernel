@@ -31,6 +31,7 @@
 #include <sound/soc.h>
 #include <sound/soc-dpcm.h>
 #include <sound/initval.h>
+#include <sound/soc/qcom/debug.h>
 
 #define DPCM_MAX_BE_USERS	8
 
@@ -451,7 +452,11 @@ static void soc_pcm_init_runtime_hw(struct snd_pcm_substream *substream)
  */
 static int soc_pcm_open(struct snd_pcm_substream *substream)
 {
-        printk("SND_DRIVER:: ENTER  -- SOC_PCM_OPEN\n");
+	if (lpass_platform_verbose == 1)
+	{
+    	printk("SND_DRIVER:: ENTER  -- SOC_PCM_OPEN\n");
+    }
+
 	struct snd_soc_pcm_runtime *rtd = substream->private_data;
 	struct snd_pcm_runtime *runtime = substream->runtime;
 	struct snd_soc_platform *platform = rtd->platform;
@@ -621,8 +626,10 @@ out:
 	}
 	if (!cpu_dai->active)
 		pinctrl_pm_select_sleep_state(cpu_dai->dev);
-
-        printk("SND_DRIVER:: EXIT  -- SOC_PCM_OPEN\n");
+		if (lpass_platform_verbose == 1)
+		{
+        	printk("SND_DRIVER:: EXIT  -- SOC_PCM_OPEN\n");
+    	}
 	return ret;
 }
 
@@ -661,7 +668,11 @@ static void close_delayed_work(struct work_struct *work)
  */
 static int soc_pcm_close(struct snd_pcm_substream *substream)
 {
-    printk("SND_DRIVER:: ENTER  -- SOC_PCM_CLOSE\n");
+	if (lpass_platform_verbose == 1)
+	{
+    	printk("SND_DRIVER:: ENTER  -- SOC_PCM_CLOSE\n");
+    }
+
 	struct snd_soc_pcm_runtime *rtd = substream->private_data;
 	struct snd_soc_platform *platform = rtd->platform;
 	struct snd_soc_component *component;
@@ -735,7 +746,10 @@ static int soc_pcm_close(struct snd_pcm_substream *substream)
 	}
 	if (!cpu_dai->active)
 		pinctrl_pm_select_sleep_state(cpu_dai->dev);
-    printk("SND_DRIVER:: EXIT  -- SOC_PCM_CLOSE\n");
+	if (lpass_platform_verbose == 1)
+	{
+    	printk("SND_DRIVER:: EXIT  -- SOC_PCM_CLOSE\n");
+    }
 	return 0;
 }
 
@@ -964,7 +978,10 @@ codec_err:
  */
 static int soc_pcm_hw_free(struct snd_pcm_substream *substream)
 {
-    printk("SND_DRIVER:: ENTER  -- SOC_PCM_FREE\n");
+	if (lpass_platform_verbose == 1)
+	{
+    	printk("SND_DRIVER:: ENTER  -- SOC_PCM_FREE\n");
+    }
 	struct snd_soc_pcm_runtime *rtd = substream->private_data;
 	struct snd_soc_platform *platform = rtd->platform;
 	struct snd_soc_dai *cpu_dai = rtd->cpu_dai;
@@ -1017,7 +1034,10 @@ static int soc_pcm_hw_free(struct snd_pcm_substream *substream)
 		cpu_dai->driver->ops->hw_free(substream, cpu_dai);
 
 	mutex_unlock(&rtd->pcm_mutex);
-    printk("SND_DRIVER:: ENTER  -- SOC_PCM_FREE\n");
+	if (lpass_platform_verbose == 1)
+	{
+    	printk("SND_DRIVER:: ENTER  -- SOC_PCM_FREE\n");
+    }
 	return 0;
 }
 
