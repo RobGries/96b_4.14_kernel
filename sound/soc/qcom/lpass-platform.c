@@ -24,8 +24,8 @@
 #include "lpass-lpaif-reg.h"
 #include "lpass.h"
 
-static unsigned int lpass_platform_verbose;
-module_param(lpass_platform_verbose, bool, 0444); 
+static short lpass_platform_verbose = 0;
+module_param(lpass_platform_verbose, short, 0444); 
 MODULE_PARM_DESC(lpass_platform_verbose, "(0) default - no debug prints, (1) full verbosity");
 
 
@@ -64,7 +64,7 @@ static const struct snd_pcm_hardware lpass_platform_pcm_hardware = {
 
 static int lpass_platform_pcmops_open(struct snd_pcm_substream* substream)
 {
-        if (lpass_platform_verbose == TRUE)
+        if (lpass_platform_verbose == 1)
         {
             printk("SND_DRIVER:: ENTER  -- OPEN\n");
         }
@@ -120,7 +120,7 @@ static int lpass_platform_pcmops_open(struct snd_pcm_substream* substream)
 
         snd_pcm_set_runtime_buffer(substream, &substream->dma_buffer);
 
-        if (lpass_platform_verbose == TRUE)
+        if (lpass_platform_verbose == 1)
         {
             printk("SND_DRIVER:: EXIT  -- OPEN\n");
         }
@@ -130,7 +130,7 @@ static int lpass_platform_pcmops_open(struct snd_pcm_substream* substream)
 
 static int lpass_platform_pcmops_close(struct snd_pcm_substream* substream)
 {
-        if (lpass_platform_verbose == TRUE)
+        if (lpass_platform_verbose == 1)
         {
             printk("SND_DRIVER:: ENTER  -- CLOSE\n");
         }
@@ -148,7 +148,7 @@ static int lpass_platform_pcmops_close(struct snd_pcm_substream* substream)
         if (v->free_dma_channel)
                 v->free_dma_channel(drvdata, data->dma_ch);
 
-        if (lpass_platform_verbose == TRUE) 
+        if (lpass_platform_verbose == 1) 
         {
            printk("SND_DRIVER:: EXIT  -- CLOSE\n"); 
         }
@@ -244,7 +244,7 @@ static int lpass_platform_pcmops_hw_params(struct snd_pcm_substream* substream,
 static int lpass_platform_pcmops_hw_free(struct snd_pcm_substream* substream)
 {
 
-        if (lpass_platform_verbose == TRUE) 
+        if (lpass_platform_verbose == 1) 
         {
             printk("SND_DRIVER:: ENTER  -- HW_FREE\n");
         }
@@ -263,7 +263,7 @@ static int lpass_platform_pcmops_hw_free(struct snd_pcm_substream* substream)
                 dev_err(soc_runtime->dev, "error writing to rdmactl reg: %d\n",
                         ret);
 
-        if (lpass_platform_verbose == TRUE) 
+        if (lpass_platform_verbose == 1) 
         {
             printk("SND_DRIVER:: EXIT  -- HW_FREE\n");
         }
@@ -535,7 +535,7 @@ static irqreturn_t lpass_platform_lpaif_irq(int irq, void* data)
 
 static int lpass_platform_pcm_new(struct snd_soc_pcm_runtime* soc_runtime)
 {
-        if (lpass_platform_verbose == TRUE) 
+        if (lpass_platform_verbose == 1) 
         {
             printk("SND_DRIVER:: ENTER  -- PCM_NEW\n");
         }
@@ -569,7 +569,7 @@ static int lpass_platform_pcm_new(struct snd_soc_pcm_runtime* soc_runtime)
                 }
 
         }
-        if (lpass_platform_verbose == TRUE) 
+        if (lpass_platform_verbose == 1) 
         {
             printk("SND_DRIVER:: EXIT  -- PCM_NEW\n");
         }
@@ -579,7 +579,7 @@ static int lpass_platform_pcm_new(struct snd_soc_pcm_runtime* soc_runtime)
 
 static void lpass_platform_pcm_free(struct snd_pcm* pcm)
 {
-        if (lpass_platform_verbose == TRUE) 
+        if (lpass_platform_verbose == 1) 
         {
             printk("SND_DRIVER:: ENTER  -- PCM_FREE\n");
         }
@@ -595,7 +595,7 @@ static void lpass_platform_pcm_free(struct snd_pcm* pcm)
                         substream->dma_buffer.addr = 0;
                 }
         }
-        if (lpass_platform_verbose == TRUE) 
+        if (lpass_platform_verbose == 1) 
         {
             printk("SND_DRIVER:: EXIT  -- PCM_FREE\n");
         }
