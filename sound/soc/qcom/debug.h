@@ -1,0 +1,1 @@
+static short lpass_platform_verbose = 0;
