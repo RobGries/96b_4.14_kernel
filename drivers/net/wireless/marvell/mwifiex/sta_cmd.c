@@ -220,8 +220,7 @@ static int mwifiex_cmd_tx_rate_cfg(struct mwifiex_private *priv,
 					     sizeof(struct mwifiex_rate_scope));
 	rate_drop->type = cpu_to_le16(TLV_TYPE_RATE_DROP_CONTROL);
 	rate_drop->length = cpu_to_le16(sizeof(rate_drop->rate_drop_mode));
-    // disable adaptive rate dropping
-    rate_drop->rate_drop_mode = 1;
+	rate_drop->rate_drop_mode = 0;
 
 	cmd->size =
 		cpu_to_le16(S_DS_GEN + sizeof(struct host_cmd_ds_tx_rate_cfg) +
